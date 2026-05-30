@@ -6,6 +6,7 @@ const http = require('http');
 const { exec } = require('child_process');
 const crypto = require('crypto');
 const { WebSocketServer, WebSocket } = require('ws');
+const validator = require('./utils/validator');
 
 const PORT = 10087;
 
@@ -225,11 +226,33 @@ async function handleHotkey(keys) {
   return await runPowerShell(script);
 }
 
+const ALLOWED_ACTIONS = new Set([
+  'navigate', 'click', 'fill', 'mouse_click', 'snapshot', 'scroll', 'hover',
+  'wait_for', 'wait_for_network_idle', 'close_tab', 'get_tabs', 'evaluate',
+  'frame_switch', 'handle_dialog', 'os_screenshot', 'os_click', 'hotkey'
+]);
+
 // Process action request (either OS-level or routes to Browser Extension)
 async function processAction(action, args, onResult) {
   const actionLower = action.toLowerCase();
   
+  // 1. Whitelist validation
+  if (!ALLOWED_ACTIONS.has(actionLower)) {
+    onResult({ success: false, error: `Action "${action}" is not whitelisted.` });
+    return;
+  }
+
+  // 2. Input validation & sanitization
+  if (args.selector && !validator.isValidSelector(args.selector)) {
+    onResult({ success: false, error: 'Unsafe CSS selector pattern blocked.' });
+    return;
+  }
+
   if (actionLower === 'os_screenshot') {
+    if (typeof args.path !== 'string' || /[;&|`]/.test(args.path)) {
+      onResult({ success: false, error: 'Invalid or unsafe screenshot path.' });
+      return;
+    }
     try {
       const res = await handleOsScreenshot(args.path);
       onResult({ success: true, message: res });
@@ -237,6 +260,10 @@ async function processAction(action, args, onResult) {
       onResult({ success: false, error: err.message });
     }
   } else if (actionLower === 'os_click') {
+    if (!validator.isValidCoordinate(args.x, args.y)) {
+      onResult({ success: false, error: 'Invalid click coordinates.' });
+      return;
+    }
     try {
       const res = await handleOsClick(args.x, args.y);
       onResult({ success: true, message: res });
@@ -244,6 +271,10 @@ async function processAction(action, args, onResult) {
       onResult({ success: false, error: err.message });
     }
   } else if (actionLower === 'hotkey') {
+    if (!Array.isArray(args.keys) || args.keys.some(k => typeof k !== 'string' || k.length > 20 || /[;&|`]/.test(k))) {
+      onResult({ success: false, error: 'Invalid or unsafe hotkey parameters.' });
+      return;
+    }
     try {
       const res = await handleHotkey(args.keys);
       onResult({ success: true, message: res });
@@ -251,6 +282,18 @@ async function processAction(action, args, onResult) {
       onResult({ success: false, error: err.message });
     }
   } else {
+    // Validate target URL for navigations
+    if (actionLower === 'navigate' && args.url && !validator.isValidUrl(args.url)) {
+      onResult({ success: false, error: 'Invalid or unsupported URL protocol.' });
+      return;
+    }
+
+    // Validate JS code for evaluation
+    if (actionLower === 'evaluate' && args.code && !validator.isValidCode(args.code)) {
+      onResult({ success: false, error: 'Unsafe JavaScript pattern blocked.' });
+      return;
+    }
+
     // Browser DOM command: Send to extension
     if (!extensionSocket || extensionSocket.readyState !== WebSocket.OPEN) {
       onResult({ success: false, error: 'Chrome extension not connected to daemon.' });
@@ -623,7 +666,7 @@ server.on('error', (e) => {
   }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '127.0.0.1', () => {
   if (!isNative) {
     console.log(`===========================================================`);
     console.log(`  GangNiaga WebBridge Daemon running on Port ${PORT}`);
