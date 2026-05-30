@@ -541,7 +541,7 @@ const wss = new WebSocketServer({ noServer: true });
 server.on('upgrade', (request, socket, head) => {
   // Origin-based lock for extension, token auth for other controller connections
   const origin = request.headers['origin'] || '';
-  const isExtension = origin.startsWith('chrome-extension://hinhmbbmelmmgiehkfmmkmfndadahmkk');
+  const isExtension = origin.startsWith('chrome-extension://');
   
   if (apiKey && !isExtension) {
     try {
