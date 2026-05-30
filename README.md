@@ -83,9 +83,9 @@ If you use Claude Desktop or Hermes:
 
 GangNiaga WebBridge is designed to be the ultimate translation layer between LLMs and your browser. Here is how to connect it to major AI ecosystems:
 
-### 🦅 1. Hermes Agent (Sovereign OS)
-Hermes is GangNiaga's God-mode agentic framework.
-*   **Setup:** Hermes uses the `gangniaga-webbridge-pro` skill.
+### 🦅 1. Official Hermes-Agent (Autonomous AI)
+WebBridge natively supports the **Official Hermes-Agent** ecosystem for deep OS-level automation.
+*   **Setup:** Hermes uses the `gangniaga-webbridge-pro` skill to connect seamlessly to the browser.
 *   **Usage:** Once `install-skills.bat` is run, Hermes will automatically detect the WebBridge daemon on port `10087` and can be instructed in natural language (e.g. *"Hermes, open Canva and download my latest design"*). Hermes will query the local YAML database, acquire the `_tabId`, and silently automate the browser in the background.
 
 ### 🌐 2. OpenClaw (Remote Control)
