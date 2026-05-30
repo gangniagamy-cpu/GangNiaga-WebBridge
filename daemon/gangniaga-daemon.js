@@ -4,42 +4,14 @@
 
 const http = require('http');
 const { exec } = require('child_process');
-const crypto = require('crypto');
 const { WebSocketServer, WebSocket } = require('ws');
 const validator = require('./utils/validator');
+const config = require('./config');
 
-const PORT = 10087;
-
-// Configurable Command Timeout via env (default 30s)
-const COMMAND_TIMEOUT_MS = parseInt(process.env.GANGNIAGA_TIMEOUT_MS, 10) || 30000;
-
-// Setup API Key Authentication
-const fs = require('fs');
-const path = require('path');
-const authFilePath = path.join(__dirname, '.webbridge-auth.json');
-let apiKey = process.env.GANGNIAGA_API_KEY || null;
-
-if (!apiKey) {
-  if (fs.existsSync(authFilePath)) {
-    try {
-      const authData = JSON.parse(fs.readFileSync(authFilePath, 'utf8'));
-      apiKey = authData.apiKey;
-    } catch (e) {
-      // Ignore JSON parse errors
-    }
-  }
-  if (!apiKey) {
-    apiKey = crypto.randomBytes(32).toString('hex');
-    try {
-      fs.writeFileSync(authFilePath, JSON.stringify({ apiKey }, null, 2), 'utf8');
-    } catch (e) {
-      console.error('[auth] Failed to write auth key to file:', e.message);
-    }
-  }
-}
-
-// E2EE secret key can be set via env variable GANGNIAGA_SECRET
-const SECRET_KEY = process.env.GANGNIAGA_SECRET || null;
+const PORT = config.PORT;
+const COMMAND_TIMEOUT_MS = config.COMMAND_TIMEOUT_MS;
+let apiKey = config.getApiKey();
+const SECRET_KEY = config.SECRET_KEY;
 
 class E2EETunnel {
   constructor(secretKey) {
@@ -162,7 +134,7 @@ function runPowerShell(script) {
     const base64 = buffer.toString('base64');
     const cmd = `powershell.exe -NoProfile -NonInteractive -EncodedCommand ${base64}`;
     
-    exec(cmd, (error, stdout, stderr) => {
+    exec(cmd, (error, stdout, _stderr) => {
       if (error) {
         reject(error);
       } else {
@@ -230,9 +202,16 @@ async function handleHotkey(keys) {
 
 const ALLOWED_ACTIONS = new Set([
   'navigate', 'click', 'fill', 'mouse_click', 'snapshot', 'scroll', 'hover',
-  'wait_for', 'wait_for_network_idle', 'close_tab', 'get_tabs', 'evaluate',
+  'wait_for', 'wait_for_network_idle', 'close_tab', 'get_tabs', 'list_tabs', 'evaluate',
   'frame_switch', 'handle_dialog', 'os_screenshot', 'os_click', 'hotkey',
-  'key_type', 'send_keys', 'screenshot', 'save_as_pdf', 'upload', 'network', 'cdp', 'extract_text'
+  'key_type', 'send_keys', 'screenshot', 'save_as_pdf', 'upload', 'network', 'cdp', 'extract_text',
+  'select_option', 'drag_drop', 'double_click', 'right_click', 'focus', 'clear_field',
+  'check_checkbox', 'get_page_source', 'query_selector_all', 'get_cookies', 'set_cookie',
+  'local_storage', 'block_urls', 'set_user_agent', 'emulate_device', 'set_geolocation',
+  'inject_css', 'page_hash', 'performance_metrics', 'get_attribute', 'set_attribute',
+  'console_log', 'iframe_switch', 'extract_links', 'extract_forms', 'extract_meta',
+  'extract_table', 'youtube_transcript', 'swarm_broadcast', 'swarm_read',
+  'auto_organize_tabs', 'cross_tab_extract', 'local_ai', 'local_summarize'
 ]);
 
 // Process action request (either OS-level or routes to Browser Extension)
@@ -281,13 +260,68 @@ async function processAction(action, args, onResult) {
       onResult({ success: false, error: err.message });
     }
   } else if (actionLower === 'hotkey') {
-    if (!Array.isArray(args.keys) || args.keys.some(k => typeof k !== 'string' || k.length > 20 || /[;&|`]/.test(k))) {
+    if (!Array.isArray(args.keys) || args.keys.some(k => typeof k !== 'string' || k.length > 20 || /[;&|`']/g.test(k))) {
       onResult({ success: false, error: 'Invalid or unsafe hotkey parameters.' });
       return;
     }
     try {
       const res = await handleHotkey(args.keys);
       onResult({ success: true, message: res });
+    } catch (err) {
+      onResult({ success: false, error: err.message });
+    }
+  } else if (actionLower === 'os_type') {
+    if (typeof args.text !== 'string' || args.text.length > 500 || /[;&|`']/.test(args.text)) {
+      onResult({ success: false, error: 'Invalid or unsafe text input.' });
+      return;
+    }
+    try {
+      const escaped = args.text.replace(/'/g, "''");
+      const script = `
+        [Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms') | Out-Null
+        [System.Windows.Forms.SendKeys]::SendWait('${escaped}')
+        Write-Output "Typed: ${escaped}"
+      `;
+      const res = await runPowerShell(script);
+      onResult({ success: true, message: res });
+    } catch (err) {
+      onResult({ success: false, error: err.message });
+    }
+  } else if (actionLower === 'list_tabs' || actionLower === 'get_tabs') {
+    try {
+      // Primary: Use CDP via Chrome remote debugging to get full tab info
+      const result = await (async () => {
+        // Try CDP on port 9222 (Chrome --remote-debugging-port)
+        const http = require('http');
+        return await new Promise((resolve, reject) => {
+          const req = http.get('http://127.0.0.1:9222/json', (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+              try {
+                const tabs = JSON.parse(data);
+                resolve(tabs.map(t => ({
+                  title: t.title || '',
+                  url: t.url || '',
+                  id: t.id || '',
+                  type: t.type || 'tab'
+                })).filter(t => t.url && !t.url.startsWith('chrome://')));
+              } catch (e) { reject(e); }
+            });
+          });
+          req.on('error', () => reject(new Error('CDP not available')));
+          req.setTimeout(3000, () => { req.destroy(); reject(new Error('CDP timeout')); });
+        });
+      })().catch(async () => {
+        // Fallback: Use PowerShell to get window titles (no URL info)
+        const script = "Get-Process chrome -ErrorAction SilentlyContinue | Where-Object {$_.MainWindowTitle -ne ''} | ForEach-Object { $_.MainWindowTitle + ' | PID:' + $_.Id }";
+        const psResult = await runPowerShell(script);
+        return psResult.split('\n').filter(t => t.trim()).map(t => {
+          const parts = t.split(' | PID:');
+          return { title: parts[0]?.trim(), pid: parts[1]?.trim(), url: '', id: '' };
+        });
+      });
+      onResult({ success: true, data: result });
     } catch (err) {
       onResult({ success: false, error: err.message });
     }
@@ -615,6 +649,11 @@ wss.on('connection', (ws) => {
         else if (pendingWsRequests.has(reqId)) {
           const controllerWs = pendingWsRequests.get(reqId);
           pendingWsRequests.delete(reqId);
+          // Clear the timeout for this request
+          if (controllerWs._pendingTimeouts && controllerWs._pendingTimeouts.has(reqId)) {
+            clearTimeout(controllerWs._pendingTimeouts.get(reqId));
+            controllerWs._pendingTimeouts.delete(reqId);
+          }
           if (controllerWs.readyState === WebSocket.OPEN) {
             controllerWs.send(JSON.stringify(tunnel ? tunnel.encrypt(msg) : msg));
           }
@@ -649,6 +688,27 @@ wss.on('connection', (ws) => {
 
         // Map request ID to this controller to route response later
         pendingWsRequests.set(reqId, ws);
+        // Timeout: if extension doesn't respond, clean up and notify controller
+        const timeout = setTimeout(() => {
+          if (pendingWsRequests.has(reqId)) {
+            pendingWsRequests.delete(reqId);
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify(tunnel ? tunnel.encrypt({
+                type: 'tool_result',
+                responseToRequestId: reqId,
+                payload: { success: false, error: 'Command execution timed out.' }
+              }) : {
+                type: 'tool_result',
+                responseToRequestId: reqId,
+                payload: { success: false, error: 'Command execution timed out.' }
+              }));
+            }
+            console.warn(`[ws] Request ${reqId} timed out, cleaned up`);
+          }
+        }, COMMAND_TIMEOUT_MS);
+        // Store timeout so we can clear it in close handler
+        ws._pendingTimeouts = ws._pendingTimeouts || new Map();
+        ws._pendingTimeouts.set(reqId, timeout);
         extensionSocket.send(JSON.stringify(tunnel ? tunnel.encrypt(msg) : msg));
       } else {
         // Standard payload or commands
@@ -664,6 +724,21 @@ wss.on('connection', (ws) => {
     } else {
       console.log('[ws] Controller client disconnected');
       controllers.delete(ws);
+      // Clear any pending timeouts for this controller
+      if (ws._pendingTimeouts) {
+        for (const [reqId, timeout] of ws._pendingTimeouts.entries()) {
+          clearTimeout(timeout);
+          pendingWsRequests.delete(reqId);
+        }
+        ws._pendingTimeouts.clear();
+      }
+      // Clean up any pending WS requests from this controller
+      for (const [reqId, pendingWs] of pendingWsRequests.entries()) {
+        if (pendingWs === ws) {
+          pendingWsRequests.delete(reqId);
+          console.log(`[ws] Cleaned up pending request ${reqId} from disconnected controller`);
+        }
+      }
     }
   });
 });

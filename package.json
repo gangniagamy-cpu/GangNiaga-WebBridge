@@ -1,0 +1,22 @@
+{
+  "name": "gangniaga-webbridge-root",
+  "version": "2.5.0",
+  "private": true,
+  "scripts": {
+    "daemon": "node daemon/gangniaga-daemon.js",
+    "mcp": "node mcp-server/index.js",
+    "hermes": "node hermes-agent-wsl.js",
+    "hermes:interactive": "node hermes-agent-wsl.js --interactive",
+    "lint": "eslint \"**/*.js\" --max-warnings=0",
+    "format": "prettier --write \"**/*.{js,json,md,yaml,yml}\"",
+    "test": "jest"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "jest": "^29.6.0",
+    "prettier": "^3.0.0"
+  }
+}

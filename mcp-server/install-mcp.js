@@ -6,9 +6,6 @@ console.log("=========================================");
 console.log("🤖 GANGNIAGA MCP SERVER AUTO-INSTALLER");
 console.log("=========================================\n");
 
-// Get absolute path of index.js
-const mcpServerPath = path.join(__dirname, 'index.js').replace(/\\/g, '\\\\');
-
 // Target configs (Support for Claude Desktop & Custom Hermes Configs)
 const targetConfigs = [
   path.join(os.homedir(), 'AppData', 'Roaming', 'Claude', 'claude_desktop_config.json'),
