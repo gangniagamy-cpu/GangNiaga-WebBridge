@@ -1,8 +1,46 @@
 // GangNiaga WebBridge - Content Script
-// Injected into all pages for DOM interaction
+// Injected into all pages for DOM interaction with Shadow DOM traversal support
 
 (function() {
   'use strict';
+
+  // Helper to query elements recursively inside Open Shadow DOMs
+  function queryAllElementsDeep(selector, root = document) {
+    const elements = [];
+    
+    function traverse(node) {
+      if (!node) return;
+      
+      if (node.querySelectorAll) {
+        try {
+          const matches = node.querySelectorAll(selector);
+          matches.forEach(m => {
+            if (!elements.includes(m)) elements.push(m);
+          });
+        } catch (e) {
+          // Ignore invalid selector syntax errors during traversal
+        }
+      }
+      
+      if (node.shadowRoot) {
+        traverse(node.shadowRoot);
+      }
+      
+      let child = node.firstElementChild;
+      while (child) {
+        traverse(child);
+        child = child.nextElementSibling;
+      }
+    }
+    
+    traverse(root);
+    return elements;
+  }
+
+  function queryElementDeep(selector, root = document) {
+    const results = queryAllElementsDeep(selector, root);
+    return results.length > 0 ? results[0] : null;
+  }
 
   // Listen for messages from background script
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -13,15 +51,15 @@
         sendResponse({
           url: window.location.href,
           title: document.title,
-          forms: Array.from(document.forms).map(f => ({id: f.id, action: f.action})),
-          inputs: Array.from(document.querySelectorAll('input, textarea')).slice(0,20).map(i => ({type: i.type, id: i.id, placeholder: i.placeholder})),
-          images: Array.from(document.querySelectorAll('img')).slice(0,10).map(i => ({src: i.src, alt: i.alt})),
-          links: Array.from(document.querySelectorAll('a[href]')).slice(0,10).map(a => ({href: a.href, text: a.textContent.trim().slice(0,50)}))
+          forms: Array.from(queryAllElementsDeep('form')).map(f => ({id: f.id, action: f.action})),
+          inputs: Array.from(queryAllElementsDeep('input, textarea')).slice(0,20).map(i => ({type: i.type, id: i.id, placeholder: i.placeholder})),
+          images: Array.from(queryAllElementsDeep('img')).slice(0,10).map(i => ({src: i.src, alt: i.alt})),
+          links: Array.from(queryAllElementsDeep('a[href]')).slice(0,10).map(a => ({href: a.href, text: a.textContent.trim().slice(0,50)}))
         });
         break;
         
       case 'extractImages':
-        const imgs = Array.from(document.querySelectorAll('img'))
+        const imgs = Array.from(queryAllElementsDeep('img'))
           .filter(i => i.src && !i.src.startsWith('data:'))
           .map(i => ({src: i.src, alt: i.alt || '', width: i.naturalWidth, height: i.naturalHeight}));
         sendResponse({images: imgs, count: imgs.length});
@@ -33,8 +71,9 @@
         break;
         
       case 'clickElement':
-        const el = document.querySelector(request.selector);
+        const el = queryElementDeep(request.selector);
         if (el) {
+          el.scrollIntoView({ block: 'center' });
           el.click();
           sendResponse({success: true, tag: el.tagName, text: el.textContent.trim().slice(0,50)});
         } else {
@@ -43,7 +82,7 @@
         break;
         
       case 'fillInput':
-        const inp = document.querySelector(request.selector);
+        const inp = queryElementDeep(request.selector);
         if (inp) {
           inp.focus();
           const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
@@ -73,9 +112,9 @@
         const structure = {
           url: window.location.href,
           title: document.title,
-          headings: Array.from(document.querySelectorAll('h1,h2,h3')).map(h => ({level: h.tagName, text: h.textContent.trim()})),
-          sections: Array.from(document.querySelectorAll('section, article, [role="main"]')).map(s => ({tag: s.tagName, id: s.id, className: s.className})),
-          navLinks: Array.from(document.querySelectorAll('nav a, [role="navigation"] a')).slice(0,10).map(a => ({href: a.href, text: a.textContent.trim()}))
+          headings: Array.from(queryAllElementsDeep('h1,h2,h3')).map(h => ({level: h.tagName, text: h.textContent.trim()})),
+          sections: Array.from(queryAllElementsDeep('section, article, [role="main"]')).map(s => ({tag: s.tagName, id: s.id, className: s.className})),
+          navLinks: Array.from(queryAllElementsDeep('nav a, [role="navigation"] a')).slice(0,10).map(a => ({href: a.href, text: a.textContent.trim()}))
         };
         sendResponse(structure);
         break;
