@@ -50,9 +50,10 @@ Enable the following flags by pasting their paths in the Chrome address bar:
 
 1.  `chrome://flags/#prompt-api-for-gemini-nano` ➔ Set to **Enabled**.
 2.  `chrome://flags/#optimization-guide-on-device-model` ➔ Set to **Enabled BypassPrefRequirement** (forces Chrome to download the model ignoring local benchmark results).
-3.  `chrome://flags/#summarization-api-for-gemini-nano` ➔ Set to **Enabled** (if using summarizer).
+3.  `chrome://flags/#summarization-api-for-gemini-nano` (or `#summarizer-api-for-gemini-nano`) ➔ Set to **Enabled** if visible. Note: In newer Chrome versions (v138+ / v148+), this flag might be missing because the Summarizer API is **enabled by default** in stable releases.
 4.  `chrome://flags/#writer-api-for-gemini-nano` & `#rewriter-api-for-gemini-nano` ➔ Set to **Enabled** (if using writing assistants).
 5.  Restart Chrome fully.
+
 
 ### C. Triggering & Monitoring Model Download (`chrome://components`)
 1.  Navigate to `chrome://components`.
