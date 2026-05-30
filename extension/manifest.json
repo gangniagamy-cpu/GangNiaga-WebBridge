@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "GangNiaga WebBridge",
+  "description": "Bridge between Hermes Agent and Chrome for OS-level browser control",
+  "version": "1.9.15",
+  "icons": {
+    "16": "icon/16.png",
+    "32": "icon/32.png",
+    "48": "icon/48.png",
+    "128": "icon/128.png"
+  },
+  "default_locale": "en",
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "debugger",
+    "storage",
+    "alarms",
+    "tabGroups",
+    "windows",
+    "sidePanel",
+    "scripting",
+    "favicon",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_icon": {
+      "16": "icon/16.png",
+      "32": "icon/32.png"
+    },
+    "default_title": "GangNiaga WebBridge",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "popup.html"
+  },
+  "commands": {
+    "toggle-sidebar": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y"
+      },
+      "description": "Toggle GangNiaga WebBridge sidebar"
+    }
+  },
+  "omnibox": {
+    "keyword": "wb"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
