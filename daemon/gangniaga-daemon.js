@@ -9,6 +9,34 @@ const { WebSocketServer, WebSocket } = require('ws');
 
 const PORT = 10087;
 
+// Configurable Command Timeout via env (default 30s)
+const COMMAND_TIMEOUT_MS = parseInt(process.env.GANGNIAGA_TIMEOUT_MS, 10) || 30000;
+
+// Setup API Key Authentication
+const fs = require('fs');
+const path = require('path');
+const authFilePath = path.join(__dirname, '.webbridge-auth.json');
+let apiKey = process.env.GANGNIAGA_API_KEY || null;
+
+if (!apiKey) {
+  if (fs.existsSync(authFilePath)) {
+    try {
+      const authData = JSON.parse(fs.readFileSync(authFilePath, 'utf8'));
+      apiKey = authData.apiKey;
+    } catch (e) {
+      // Ignore JSON parse errors
+    }
+  }
+  if (!apiKey) {
+    apiKey = crypto.randomBytes(32).toString('hex');
+    try {
+      fs.writeFileSync(authFilePath, JSON.stringify({ apiKey }, null, 2), 'utf8');
+    } catch (e) {
+      console.error('[auth] Failed to write auth key to file:', e.message);
+    }
+  }
+}
+
 // E2EE secret key can be set via env variable GANGNIAGA_SECRET
 const SECRET_KEY = process.env.GANGNIAGA_SECRET || null;
 
@@ -245,7 +273,7 @@ async function processAction(action, args, onResult) {
         pendingHttpRequests.delete(requestId);
         onResult({ success: false, error: 'Command execution timed out.' });
       }
-    }, 30000);
+    }, COMMAND_TIMEOUT_MS);
 
     pendingHttpRequests.set(requestId, {
       resolve: (data) => {
@@ -264,7 +292,7 @@ const server = http.createServer((req, res) => {
   // Add CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     res.writeHead(200);
@@ -272,16 +300,42 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method === 'GET' && (req.url === '/status' || req.url === '/health')) {
+  // Public status/health checking
+  const isStatusCheck = req.method === 'GET' && (req.url.startsWith('/status') || req.url.startsWith('/health'));
+  if (isStatusCheck) {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       ok: true,
       running: true,
       extension_connected: !!(extensionSocket && (extensionSocket.readyState === 1 || extensionSocket.readyState === (WebSocket.OPEN || 1))),
-      version: "1.0",
+      version: "2.0",
+      auth_active: !!apiKey,
       uptime_seconds: process.uptime()
     }));
     return;
+  }
+
+  // Authenticate incoming request if API key is active
+  if (apiKey) {
+    const authHeader = req.headers['authorization'];
+    let requestToken = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      requestToken = authHeader.substring(7);
+    } else {
+      // Allow fallback query string for WebSocket upgrade token checks
+      try {
+        const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+        requestToken = parsedUrl.searchParams.get('token');
+      } catch (e) {
+        // Ignore URL parse errors
+      }
+    }
+
+    if (requestToken !== apiKey) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: 'Unauthorized. Missing or invalid Authorization Bearer token.' }));
+      return;
+    }
   }
 
   // Phase 3: Sites Knowledge API
@@ -427,6 +481,26 @@ const server = http.createServer((req, res) => {
 const wss = new WebSocketServer({ noServer: true });
 
 server.on('upgrade', (request, socket, head) => {
+  // Origin-based lock for extension, token auth for other controller connections
+  const origin = request.headers['origin'] || '';
+  const isExtension = origin.startsWith('chrome-extension://hinhmbbmelmmgiehkfmmkmfndadahmkk');
+  
+  if (apiKey && !isExtension) {
+    try {
+      const url = new URL(request.url, `http://${request.headers.host || '127.0.0.1'}`);
+      const token = url.searchParams.get('token');
+      if (token !== apiKey) {
+        socket.write('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n');
+        socket.destroy();
+        return;
+      }
+    } catch (e) {
+      socket.write('HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n');
+      socket.destroy();
+      return;
+    }
+  }
+
   wss.handleUpgrade(request, socket, head, (ws) => {
     wss.emit('connection', ws, request);
   });

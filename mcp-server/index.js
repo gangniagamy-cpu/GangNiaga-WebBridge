@@ -21,11 +21,35 @@ const server = new Server(
 
 const WEBBRIDGE_URL = "http://127.0.0.1:10087";
 
+// Read API Key from local authentication file (negotiates key automatically)
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const authFilePath = path.join(__dirname, '../daemon/.webbridge-auth.json');
+let apiKey = process.env.GANGNIAGA_API_KEY || null;
+
+if (!apiKey && fs.existsSync(authFilePath)) {
+  try {
+    const authData = JSON.parse(fs.readFileSync(authFilePath, 'utf8'));
+    apiKey = authData.apiKey;
+  } catch (e) {
+    // Ignore JSON parse errors
+  }
+}
+
 // Helper to make API calls to WebBridge Daemon
 async function callWebBridge(endpoint, method = "GET", body = null) {
   const options = { method };
+  options.headers = {};
+  
+  if (apiKey) {
+    options.headers["Authorization"] = `Bearer ${apiKey}`;
+  }
+  
   if (body) {
-    options.headers = { "Content-Type": "application/json" };
+    options.headers["Content-Type"] = "application/json";
     options.body = JSON.stringify(body);
   }
   

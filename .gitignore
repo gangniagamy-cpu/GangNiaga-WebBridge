@@ -4,3 +4,6 @@ node_modules/
 daemon/node_modules/
 mcp-server/node_modules/
 daemon-native.log
+.webbridge-auth.json
+.idea/
+.vscode/
