@@ -3,65 +3,73 @@ name: gangniaga-webbridge-pro
 description: "Sovereign control of the Windows Chrome Browser using the GangNiaga WebBridge REST API (127.0.0.1:10087). Use this skill to interact with the browser, execute Javascript, and read YAML site knowledge without manual clicks."
 ---
 
-# 🎼 GANGNIAGA WEBBRIDGE AUTOPILOT PROTOCOL
+# 🎼 GANGNIAGA WEBBRIDGE AUTOPILOT PROTOCOL (PRO EDITION)
 
-You are equipped with the **GangNiaga WebBridge**, a Native Messaging Chrome extension that gives you God-mode control over the user's Chrome browser running on Windows. You do not need Selenium, Playwright, or Puppeteer. The bridge is always alive at `http://127.0.0.1:10087`.
+You are equipped with the **GangNiaga WebBridge Pro**, a Native Messaging Chrome extension that gives you God-mode control over the user's Chrome browser running on Windows. The bridge is always alive at `http://127.0.0.1:10087`.
 
-## 📡 1. Core Endpoints
+---
+
+## 📡 1. Core Endpoints & REST Actions
 
 You must interact with the WebBridge using `curl` or `Invoke-RestMethod` to the following endpoints:
 
-1. **Check Browser Status**:
-   ```bash
-   curl -s http://127.0.0.1:10087/status
-   ```
-   *Always check this first to ensure the extension is connected (`extension_connected: true`).*
+1.  **Check Browser Status**:
+    ```bash
+    curl -s http://127.0.0.1:10087/status
+    ```
+    *Check this first to verify connection (`extension_connected: true`).*
 
-2. **Retrieve Site Knowledge (YAML Recipes)**:
-   ```bash
-   curl -s http://127.0.0.1:10087/sites/<domain>
-   ```
-   *Example: `http://127.0.0.1:10087/sites/shopee.com.my`*
-   *Use this to retrieve pre-mapped CSS selectors (search boxes, login buttons) so you don't have to guess or scrape the DOM.*
+2.  **Retrieve Site Knowledge (YAML Recipes)**:
+    ```bash
+    curl -s http://127.0.0.1:10087/sites/<domain>
+    ```
+    *Use this to retrieve pre-mapped CSS selectors (search boxes, login buttons) so you don't have to guess or scrape the DOM.*
 
-3. **Execute Browser Commands (POST `/command`)**:
-   Send a JSON payload to `http://127.0.0.1:10087/command` to execute actions.
-   ```bash
-   curl -s -X POST http://127.0.0.1:10087/command \
-     -H "Content-Type: application/json" \
-     -d '{"action": "ACTION_NAME", "args": { ... }}'
-   ```
+3.  **Persist Self-Healed Selectors (POST `/sites/update`)**:
+    When a selector fails and you heal it using a semantic search or local Gemini Nano, persist the correction so it is saved permanently:
+    ```bash
+    curl -X POST http://127.0.0.1:10087/sites/update \
+      -H "Content-Type: application/json" \
+      -d '{
+        "domain": "shopee.com.my",
+        "originalSelector": "search_input",
+        "healedSelector": "input#search-box-new-healed",
+        "healedIndex": 3,
+        "tag": "INPUT"
+      }'
+    ```
 
-## 🛠️ 2. Available Command Actions
+4.  **Execute Browser Commands (POST `/command`)**:
+    Send a JSON payload to `http://127.0.0.1:10087/command` to execute actions:
+    ```bash
+    curl -s -X POST http://127.0.0.1:10087/command \
+      -H "Content-Type: application/json" \
+      -d '{"action": "ACTION_NAME", "args": { ... }}'
+    ```
+
+---
+
+## 🛠️ 2. Upgraded Command Action Suite
 
 When sending a POST request to `/command`, use these `action` names in the JSON payload:
 
-- `open_tab` (or `navigate`): Opens a new tab or navigates the active tab.
-  - `args`: `{"url": "https://shopee.com.my"}`
-- `list_tabs`: Returns a list of all open Chrome tabs with their IDs and titles.
-  - `args`: `{}`
-- `evaluate` (or `run_js`): Executes raw Javascript in the context of the active Chrome tab and returns the result. This is your primary weapon for DOM manipulation.
-  - `args`: `{"code": "document.querySelector('input').value = 'Test'; document.title;"}`
-- `os_screenshot`: Takes a full OS-level screenshot (saved to disk).
-  - `args`: `{"path": "D:/screenshot.png"}`
-- `os_click`: Performs an OS-level mouse click at X, Y coordinates.
-  - `args`: `{"x": 500, "y": 500}`
-- `hotkey`: Sends keyboard keystrokes to the OS.
-  - `args`: `{"keys": ["ctrl", "t"]}`
-- `save_as_pdf`: Triggers Chrome DevTools Protocol to save the current page as a base64 PDF.
-  - `args`: `{}`
+-   `navigate` (or `open_tab`): Opens a new tab or navigates the active tab.
+    *   `args`: `{"url": "https://shopee.com.my", "newTab": true}`
+-   `click` / `fill`: Clicks or enters text into elements (with built-in self-healing).
+    *   `args`: `{"selector": "input.search", "value": "Laptop"}` (for fill)
+    *   `args`: `{"selector": "@e1"}` (for click on AXTree ref)
+-   `mouse_click`: Moves the mouse using a realistic Bezier curve path and clicks at coordinates.
+    *   `args`: `{"selector": "button.submit"}`
+-   `snapshot`: Returns a simplified Accessibility Tree (AXTree) representing interactive page elements with references (like `@e1`, `@e2`).
+-   `os_screenshot` / `os_click` / `hotkey`: Primary monitor screen capture, mouse click at absolute coordinates, or keyboard shortcuts (e.g. `["ctrl", "t"]`) via PowerShell on the OS level.
+-   `scroll` / `hover` / `wait_for` / `wait_for_network_idle`: Adjusts view offsets, hovers cursor, or pauses script execution until criteria are met.
+
+---
 
 ## 🧠 3. Workflow Implementation (The Hermes Way)
 
-When the user asks you to automate a website (e.g., "Search for a gaming laptop on Shopee"), follow this exact sequence:
-
-1. **Verify Connection**: `curl http://127.0.0.1:10087/status`
-2. **Fetch Knowledge**: `curl http://127.0.0.1:10087/sites/shopee.com.my` to get the CSS selectors.
-3. **Navigate**: POST to `/command` with `action: "navigate"` to open the site.
-4. **Execute**: POST to `/command` with `action: "evaluate"` and write a Javascript block that uses the CSS selectors you learned in step 2 to input text and click search.
-5. **Report**: Return the JSON output of the evaluate command back to the user to prove success.
-
-**IMPORTANT RULES:**
-- NEVER assume a CSS selector. If a site has a YAML recipe via `/sites`, you MUST read it first.
-- When running JS via `evaluate`, always wrap your logic to avoid syntax errors and ensure you return a value (e.g., `return {success: true, msg: "Clicked"}`).
-- If you are running inside WSL2 and localhost fails, use the Windows Gateway IP to reach port 10087 (e.g., `$(ip route show default | awk '{print $3}')`).
+1.  **Verify Connection**: Test the connection with `/status`.
+2.  **Fetch Selector YAML Rules**: Query `/sites/<domain>`. If selectors are found, use them directly to avoid DOM-dumping token overhead.
+3.  **Perform Actions**: Use `click`, `fill`, and `mouse_click` actions.
+4.  **Self-Healing Feedback**: If a selector fails, locate the element via `snapshot` (AXTree search) or local Gemini Nano. Perform the action, and then **proactively write the correction back to the YAML database** using `POST /sites/update`.
+5.  **Clean Exit**: Close intermediate tabs with `close_tab`.

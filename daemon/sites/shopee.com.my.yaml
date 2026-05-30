@@ -2,7 +2,7 @@ domain: "shopee.com.my"
 name: "Shopee Malaysia"
 description: "E-commerce platform in Malaysia"
 selectors:
-  search_input: "input.shopee-searchbar-input__input"
+  search_input: "input#search-box-new-healed" # healed index 3 (INPUT)
   search_button: "button.btn-solid-primary"
 recipes:
   search_item:
