@@ -79,6 +79,31 @@ If you use Claude Desktop or Hermes:
 
 ---
 
+## 🤖 AI Provider Integrations
+
+GangNiaga WebBridge is designed to be the ultimate translation layer between LLMs and your browser. Here is how to connect it to major AI ecosystems:
+
+### 🦅 1. Hermes Agent (Sovereign OS)
+Hermes is GangNiaga's God-mode agentic framework.
+*   **Setup:** Hermes uses the `gangniaga-webbridge-pro` skill.
+*   **Usage:** Once `install-skills.bat` is run, Hermes will automatically detect the WebBridge daemon on port `10087` and can be instructed in natural language (e.g. *"Hermes, open Canva and download my latest design"*). Hermes will query the local YAML database, acquire the `_tabId`, and silently automate the browser in the background.
+
+### 🌐 2. OpenClaw (Remote Control)
+OpenClaw is a gateway that allows external AI operators (or distributed LLM swarms) to command your local browser securely.
+*   **Setup:** Point your OpenClaw relay agent to `http://127.0.0.1:10087`.
+*   **Security:** Ensure that OpenClaw restricts destructive endpoints (like closing all tabs). OpenClaw translates global LLM commands into WebBridge Native Messaging JSON objects.
+
+### 🖥️ 3. Claude Desktop / Cursor IDE (via MCP)
+Anthropic's Model Context Protocol (MCP) allows IDEs to use tools directly.
+*   **Setup:** Run `setup-mcp.bat`. This registers the Node.js MCP server located in `/mcp-server/index.js`.
+*   **Usage:** In Claude Desktop, simply say: *"Check my email for the OTP code"*. Claude will invoke the `webbridge-navigate` and `webbridge-evaluate` MCP tools, which pipe through the daemon directly into Chrome.
+
+### 🐍 4. Custom Python / LangChain Agents
+If you are building your own agent using LangChain, OpenAI Operator, or AutoGPT:
+*   Instead of importing Playwright, just make standard `requests.post()` calls to the Daemon API (see API Reference below).
+
+---
+
 ## 📡 API Reference
 
 If you are writing custom Python/Node scripts, you can talk to the browser via `http://127.0.0.1:10087`.
