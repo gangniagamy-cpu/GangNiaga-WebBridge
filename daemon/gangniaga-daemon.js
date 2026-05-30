@@ -175,6 +175,7 @@ function runPowerShell(script) {
 // Perform OS screenshot
 async function handleOsScreenshot(path) {
   const safePath = path.replace(/\//g, '\\');
+  const escapedPath = safePath.replace(/'/g, "''");
   const script = `
     [Reflection.Assembly]::LoadWithPartialName('System.Drawing') | Out-Null
     [Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms') | Out-Null
@@ -182,12 +183,12 @@ async function handleOsScreenshot(path) {
     $bmp = New-Object Drawing.Bitmap $bounds.Width, $bounds.Height
     $graphics = [Drawing.Graphics]::FromImage($bmp)
     $graphics.CopyFromScreen($bounds.Location, [Drawing.Point]::Empty, $bounds.Size)
-    $dir = Split-Path -Path '${safePath}'
+    $dir = Split-Path -Path '${escapedPath}'
     if (!(Test-Path -Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
-    $bmp.Save('${safePath}')
+    $bmp.Save('${escapedPath}')
     $graphics.Dispose()
     $bmp.Dispose()
-    Write-Output "Screenshot saved to ${safePath}"
+    Write-Output "Screenshot saved to ${escapedPath}"
   `;
   return await runPowerShell(script);
 }
@@ -218,10 +219,11 @@ async function handleOsClick(x, y) {
 // Perform OS hotkey
 async function handleHotkey(keys) {
   const sendKeyStr = keysToSendKeys(keys);
+  const escapedSendKeyStr = sendKeyStr.replace(/'/g, "''");
   const script = `
     [Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms') | Out-Null
-    [System.Windows.Forms.SendKeys]::SendWait('${sendKeyStr}')
-    Write-Output "Sent keys: ${sendKeyStr}"
+    [System.Windows.Forms.SendKeys]::SendWait('${escapedSendKeyStr}')
+    Write-Output "Sent keys: ${escapedSendKeyStr}"
   `;
   return await runPowerShell(script);
 }
@@ -229,12 +231,20 @@ async function handleHotkey(keys) {
 const ALLOWED_ACTIONS = new Set([
   'navigate', 'click', 'fill', 'mouse_click', 'snapshot', 'scroll', 'hover',
   'wait_for', 'wait_for_network_idle', 'close_tab', 'get_tabs', 'evaluate',
-  'frame_switch', 'handle_dialog', 'os_screenshot', 'os_click', 'hotkey'
+  'frame_switch', 'handle_dialog', 'os_screenshot', 'os_click', 'hotkey',
+  'key_type', 'send_keys', 'screenshot', 'save_as_pdf', 'upload', 'network', 'cdp', 'extract_text'
 ]);
 
 // Process action request (either OS-level or routes to Browser Extension)
 async function processAction(action, args, onResult) {
-  const actionLower = action.toLowerCase();
+  let actionLower = action.toLowerCase();
+  
+  // Intercept extract_text and map it to evaluate
+  if (actionLower === 'extract_text') {
+    action = 'evaluate';
+    actionLower = 'evaluate';
+    args = { code: 'document.body.innerText' };
+  }
   
   // 1. Whitelist validation
   if (!ALLOWED_ACTIONS.has(actionLower)) {
@@ -391,9 +401,9 @@ const server = http.createServer((req, res) => {
       try {
         const data = JSON.parse(body);
         const { domain, originalSelector, healedSelector, healedIndex, tag } = data;
-        if (!domain) {
+        if (!domain || !validator.isValidDomain(domain)) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ ok: false, error: 'Missing domain in request.' }));
+          res.end(JSON.stringify({ ok: false, error: 'Missing or invalid domain.' }));
           return;
         }
         
@@ -464,6 +474,11 @@ const server = http.createServer((req, res) => {
       // Get specific site
       const domain = req.url.split('/')[2];
       if (domain) {
+        if (!validator.isValidDomain(domain)) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'Invalid domain format.' }));
+          return;
+        }
         const filePath = path.join(sitesDir, `${domain}.yaml`);
         if (fs.existsSync(filePath)) {
           const content = fs.readFileSync(filePath, 'utf8');

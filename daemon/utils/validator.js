@@ -12,6 +12,15 @@ const validator = {
     }
   },
   
+  // Validate domain format to prevent path traversal and shell injection
+  isValidDomain(domain) {
+    if (typeof domain !== 'string') return false;
+    return /^[a-zA-Z0-9.-]+$/.test(domain) && 
+           domain.length > 0 && 
+           domain.length <= 253 && 
+           !domain.includes('..');
+  },
+  
   // Validate CSS selector to prevent script injection in selectors
   isValidSelector(selector) {
     if (typeof selector !== 'string') return false;

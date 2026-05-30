@@ -1,5 +1,5 @@
 $chromePath = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
-$extPath = 'D:\GangNiaga-WebBridge'
+$extPath = 'D:\GangNiaga-WebBridge\extension'
 
 Write-Host "=== GangNiaga WebBridge Extension Installer ==="
 Write-Host ""
@@ -16,7 +16,7 @@ if ($chromeRunning) {
     Write-Host "2. Go to chrome://extensions"
     Write-Host "3. Enable 'Developer mode' (top right toggle)"
     Write-Host "4. Click 'Load unpacked'"
-    Write-Host "5. Select folder: D:\GangNiaga-WebBridge"
+    Write-Host "5. Select folder: D:\GangNiaga-WebBridge\extension"
     Write-Host "6. Click extension icon in toolbar"
     Write-Host "7. Verify status shows 'Ready (Connected)'"
 } else {
