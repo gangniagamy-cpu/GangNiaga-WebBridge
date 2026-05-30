@@ -25,7 +25,7 @@ Panduan ini menerangkan cara mengintegrasikan **GangNiaga WebBridge** Chrome Ext
 
 ### Contoh System Rules untuk Cursor Agent:
 Masukkan arahan berikut dalam Rules for AI anda:
-> "You have access to a local browser automation bridge called **GangNiaga WebBridge** running on `ws://127.0.0.1:10087/ws`. When asked to inspect a webpage, you should write and execute Node.js scripts using the `ws` package to send JSON tool calls. The browser automation protocols and tool schemas are detailed in [integrations/README.md](file:///D:/kimi-webbridge-extension/integrations/README.md)."
+> "You have access to a local browser automation bridge called **GangNiaga WebBridge** running on `ws://127.0.0.1:10087/ws`. When asked to inspect a webpage, you should write and execute Node.js scripts using the `ws` package to send JSON tool calls. The browser automation protocols and tool schemas are detailed in [integrations/README.md](file:///D:/GangNiaga-WebBridge/integrations/README.md)."
 
 ---
 

@@ -22,9 +22,9 @@ graph LR
 
 Kami menyediakan fail konfigurasi, kod pelayan daemon (mock-server), dan contoh sistem prompt bagi setiap provider:
 
-1. 🌐 **[OpenClaw Integration Guide](file:///D:/kimi-webbridge-extension/integrations/openclaw.md)**: Cara menyambungkan OpenClaw Gateway (`operator.gangniaga.my`) dan ejen PUSPA-V4.
-2. 🦅 **[Hermes Agent Integration Guide](file:///D:/kimi-webbridge-extension/integrations/hermes_agent.md)**: Panduan integrasi penuh bersama Hermes Agent dan skrip Python/Node.js tersuai.
-3. 🤖 **[Claude Code & IDEs Guide](file:///D:/kimi-webbridge-extension/integrations/claude_code.md)**: Menyambungkan Claude Code CLI, Cursor, dan Codex secara langsung menggunakan WebSocket relay.
+1. 🌐 **[OpenClaw Integration Guide](file:///D:/GangNiaga-WebBridge/integrations/openclaw.md)**: Cara menyambungkan OpenClaw Gateway (`operator.gangniaga.my`) dan ejen PUSPA-V4.
+2. 🦅 **[Hermes Agent Integration Guide](file:///D:/GangNiaga-WebBridge/integrations/hermes_agent.md)**: Panduan integrasi penuh bersama Hermes Agent dan skrip Python/Node.js tersuai.
+3. 🤖 **[Claude Code & IDEs Guide](file:///D:/GangNiaga-WebBridge/integrations/claude_code.md)**: Menyambungkan Claude Code CLI, Cursor, dan Codex secara langsung menggunakan WebSocket relay.
 
 ---
 
