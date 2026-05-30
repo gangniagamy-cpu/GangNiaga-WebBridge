@@ -116,6 +116,14 @@ If you are using Claude Desktop, Cursor, or Hermes-Agent:
 2. The script automatically registers the WebBridge Model Context Protocol server.
 3. Restart your AI client. You will see **17 powerful new browser control tools** (e.g., `webbridge-navigate`, `webbridge-click`, `webbridge-snapshot`) available out of the box.
 
+### Step 4: Install AI Skills (For Hermes-Agent & Gemini CLI)
+If you are using **Hermes-Agent** or **Gemini CLI** to run autonomous agents:
+1. Double-click `install-skills.bat`.
+2. The script will automatically copy the WebBridge skills (`gangniaga-webbridge-pro`, `gangniaga-site-mapper`, `sovereign-ai-developer-pro`) to your active agent skills folders:
+   * **Hermes-Agent** path: `%USERPROFILE%\.hermes\skills\`
+   * **Gemini CLI** path: `%USERPROFILE%\.gemini\skills\`
+3. Your local AI agents will instantly inherit A-Z browser control capabilities.
+
 ---
 
 ## 🔌 API & Integration Guide
@@ -163,6 +171,6 @@ curl -X POST http://127.0.0.1:10087/command \
 ---
 
 ## 🛡️ License & Compliance
-Built with ❤️ by **The Official Hermes-Agent Team**.
+Built with ❤️.
 This project operates under Sovereign AI Development Protocols. No bots were harmed in the making of this architecture.
 Licensed under the [MIT License](LICENSE).
