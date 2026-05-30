@@ -81,7 +81,7 @@ if (isNative) {
   console.debug = (...args) => log('[DEBUG] ', args);
 
   extensionSocket = {
-    readyState: WebSocket.OPEN || 1,
+    readyState: 1, // WebSocket.OPEN
     send: (msg) => {
       const buf = Buffer.from(msg, 'utf8');
       const header = Buffer.alloc(4);
@@ -272,12 +272,12 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method === 'GET' && req.url === '/status') {
+  if (req.method === 'GET' && (req.url === '/status' || req.url === '/health')) {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       ok: true,
       running: true,
-      extension_connected: !!(extensionSocket && extensionSocket.readyState === (WebSocket.OPEN || 1)),
+      extension_connected: !!(extensionSocket && (extensionSocket.readyState === 1 || extensionSocket.readyState === (WebSocket.OPEN || 1))),
       version: "1.0",
       uptime_seconds: process.uptime()
     }));

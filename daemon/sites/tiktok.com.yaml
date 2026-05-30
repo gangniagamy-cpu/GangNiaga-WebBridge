@@ -1,0 +1,17 @@
+domain: "tiktok.com"
+name: "TikTok"
+description: "Short-form video sharing platform"
+selectors:
+  login_link: "a[data-e2e='top-login-button']"
+  search_input: "input[data-e2e='search-user-input']"
+  search_button: "button[data-e2e='search-box-button']"
+  upload_link: "a[data-e2e='navigation-upload']"
+  caption_editor: "div.public-DraftEditor-content[role='textbox']"
+recipes:
+  search_tiktok:
+    description: "Search for a user or video on TikTok"
+    steps:
+      - action: fill
+        selector: "input[data-e2e='search-user-input']"
+      - action: click
+        selector: "button[data-e2e='search-box-button']"

@@ -46,7 +46,16 @@
         const inp = document.querySelector(request.selector);
         if (inp) {
           inp.focus();
-          inp.value = request.value;
+          const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+            window.HTMLInputElement.prototype, 'value'
+          )?.set || Object.getOwnPropertyDescriptor(
+            window.HTMLTextAreaElement.prototype, 'value'
+          )?.set;
+          if (nativeInputValueSetter) {
+            nativeInputValueSetter.call(inp, request.value);
+          } else {
+            inp.value = request.value;
+          }
           inp.dispatchEvent(new Event('input', {bubbles: true}));
           inp.dispatchEvent(new Event('change', {bubbles: true}));
           sendResponse({success: true});

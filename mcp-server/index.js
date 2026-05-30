@@ -221,6 +221,38 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["keys"],
         },
       },
+      {
+        name: "browser_key_type",
+        description: "Simulate typing a text string character-by-character with random human-like delays and occasional self-correcting typos.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            text: { type: "string", description: "Text to type" },
+          },
+          required: ["text"],
+        },
+      },
+      {
+        name: "browser_send_keys",
+        description: "Send modifier keys and special key sequences (e.g. 'Control+a', 'Enter', 'Escape') to the browser page.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            keys: { type: "string", description: "Key sequence or combination, e.g., 'Control+a' or 'Enter'" },
+          },
+          required: ["keys"],
+        },
+      },
+      {
+        name: "browser_extract_text",
+        description: "Extract the inner text content from the active page body.",
+        inputSchema: { type: "object", properties: {} },
+      },
+      {
+        name: "browser_save_as_pdf",
+        description: "Save the current webpage layout as a PDF file on the host.",
+        inputSchema: { type: "object", properties: {} },
+      },
     ],
   };
 });
