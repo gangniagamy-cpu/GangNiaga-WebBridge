@@ -681,11 +681,11 @@ server.on('error', (e) => {
   }
 });
 
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, '0.0.0.0', () => {
   if (!isNative) {
     console.log(`===========================================================`);
     console.log(`  GangNiaga WebBridge Daemon running on Port ${PORT}`);
-    console.log(`  Listening at http://127.0.0.1:${PORT} & ws://127.0.0.1:${PORT}/ws`);
+    console.log(`  Listening at http://0.0.0.0:${PORT} & ws://0.0.0.0:${PORT}/ws`);
     if (SECRET_KEY) {
       console.log(`  E2EE Encryption is ACTIVE (using GANGNIAGA_SECRET)`);
     } else {
