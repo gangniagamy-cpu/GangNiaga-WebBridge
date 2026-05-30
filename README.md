@@ -1,7 +1,7 @@
 <div align="center">
   <img src="assets/images/banner.png" alt="GangNiaga WebBridge Banner" width="100%" />
   <br><br>
-  <img src="https://raw.githubusercontent.com/gangniagamy-cpu/GangNiaga-WebBridge/main/extension/icon/128.png" alt="GangNiaga WebBridge Logo" width="128" />
+  <img src="extension/icon/128.png" alt="GangNiaga WebBridge Logo" width="128" />
   <h1>GangNiaga WebBridge Pro</h1>
   <p><strong>The OS-Level Browser Automation Engine for LLMs & AI Agents.</strong></p>
 
