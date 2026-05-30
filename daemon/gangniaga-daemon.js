@@ -285,6 +285,66 @@ const server = http.createServer((req, res) => {
   }
 
   // Phase 3: Sites Knowledge API
+  if (req.method === 'POST' && req.url === '/sites/update') {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        const { domain, originalSelector, healedSelector, healedIndex, tag } = data;
+        if (!domain) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'Missing domain in request.' }));
+          return;
+        }
+        
+        const fs = require('fs');
+        const path = require('path');
+        const sitesDir = path.join(__dirname, 'sites');
+        if (!fs.existsSync(sitesDir)) fs.mkdirSync(sitesDir);
+        const filePath = path.join(sitesDir, `${domain}.yaml`);
+        
+        let fileContent = '';
+        if (fs.existsSync(filePath)) {
+          fileContent = fs.readFileSync(filePath, 'utf8');
+        } else {
+          fileContent = `domain: "${domain}"\nselectors:\n`;
+        }
+
+        // Add or update selector in selectors block
+        const lines = fileContent.split('\n');
+        const entryKey = `  ${originalSelector}:`;
+        const entryValue = ` "${healedSelector.replace(/"/g, '\\"')}" # healed index ${healedIndex} (${tag})`;
+        
+        let keyIndex = lines.findIndex(l => l.startsWith(entryKey));
+        if (keyIndex !== -1) {
+          lines[keyIndex] = `${entryKey}${entryValue}`;
+        } else {
+          // Find selectors section
+          let selIndex = lines.findIndex(l => l.startsWith('selectors:'));
+          if (selIndex !== -1) {
+            lines.splice(selIndex + 1, 0, `${entryKey}${entryValue}`);
+          } else {
+            lines.push('selectors:');
+            lines.push(`${entryKey}${entryValue}`);
+          }
+        }
+        
+        fs.writeFileSync(filePath, lines.join('\n'), 'utf8');
+        console.log(`[daemon] Persisted healed selector for ${domain}: ${originalSelector} -> ${healedSelector}`);
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, message: 'Healed selector persisted successfully.' }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Failed to update site rule.', details: err.message }));
+      }
+    });
+    return;
+  }
+
   if (req.method === 'GET' && req.url.startsWith('/sites')) {
     const fs = require('fs');
     const path = require('path');

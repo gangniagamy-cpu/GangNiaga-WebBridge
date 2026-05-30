@@ -10,7 +10,7 @@ import {
 const server = new Server(
   {
     name: "gangniaga-webbridge",
-    version: "1.0.0",
+    version: "2.0.0",
   },
   {
     capabilities: {
@@ -44,12 +44,12 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: "browser_status",
-        description: "Check if the GangNiaga WebBridge is running and connected to Chrome.",
+        description: "Check if the GangNiaga WebBridge daemon and Chrome extension are running and connected.",
         inputSchema: { type: "object", properties: {} },
       },
       {
         name: "browser_get_site_rules",
-        description: "Fetch the YAML site knowledge base (selectors and recipes) for a specific domain (e.g. shopee.com.my). ALWAYS use this before interacting with a new site.",
+        description: "Fetch the YAML site knowledge base (selectors and recipes) for a specific domain (e.g. shopee.com.my). ALWAYS run this before interacting with a new website to avoid hallucinating selectors.",
         inputSchema: {
           type: "object",
           properties: {
@@ -60,25 +60,165 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "browser_navigate",
-        description: "Open a URL in a new Chrome tab. Returns the tabId which you MUST use for subsequent commands.",
+        description: "Navigate the browser to a specific URL. Can open in a new tab if newTab is true. Returns tabId.",
         inputSchema: {
           type: "object",
           properties: {
             url: { type: "string", description: "URL to navigate to" },
+            newTab: { type: "boolean", description: "Whether to open in a new tab (default: false)" },
+            _session: { type: "string", description: "Optional session name for tab grouping" },
+            group_title: { type: "string", description: "Optional tab group title color coding" },
           },
           required: ["url"],
         },
       },
       {
-        name: "browser_evaluate",
-        description: "Execute Javascript in a specific tab. Use this to click buttons or fill inputs based on the site rules.",
+        name: "browser_snapshot",
+        description: "Get the simplified Accessibility Tree (AXTree) of the current page. Returns elements with ref strings (like @e1) to be used with click/fill.",
+        inputSchema: { type: "object", properties: {} },
+      },
+      {
+        name: "browser_click",
+        description: "Click an element on the page using a CSS selector or ref string (e.g., '@e1'). Supports AI self-healing.",
         inputSchema: {
           type: "object",
           properties: {
-            code: { type: "string", description: "Javascript code to execute. MUST return a value." },
-            tabId: { type: "number", description: "The tabId to execute the code in (obtained from browser_navigate)." },
+            selector: { type: "string", description: "CSS selector or @e ref" },
+            _approved: { type: "boolean", description: "Set to true to bypass sensitive action warning if prompt asks to proceed with confirmation" },
           },
-          required: ["code", "tabId"],
+          required: ["selector"],
+        },
+      },
+      {
+        name: "browser_fill",
+        description: "Fill an input field with text using a CSS selector or ref string. Supports AI self-healing.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            selector: { type: "string", description: "CSS selector or @e ref" },
+            value: { type: "string", description: "Text value to fill" },
+            _approved: { type: "boolean", description: "Set to true to bypass sensitive action warning if prompt asks to proceed with confirmation" },
+          },
+          required: ["selector", "value"],
+        },
+      },
+      {
+        name: "browser_mouse_click",
+        description: "Move the mouse to an element using Bezier curve path and click it at the coordinates (simulates human movement to bypass anti-bots).",
+        inputSchema: {
+          type: "object",
+          properties: {
+            selector: { type: "string", description: "CSS selector or @e ref" },
+            _approved: { type: "boolean", description: "Set to true to bypass sensitive action warning" },
+          },
+          required: ["selector"],
+        },
+      },
+      {
+        name: "browser_scroll",
+        description: "Scroll the page. Can scroll by delta coordinates or scroll to a specific element.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            x: { type: "number", description: "Horizontal scroll offset" },
+            y: { type: "number", description: "Vertical scroll offset" },
+            selector: { type: "string", description: "Optional CSS selector to scroll into view" },
+          },
+        },
+      },
+      {
+        name: "browser_hover",
+        description: "Hover mouse over an element on the page.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            selector: { type: "string", description: "CSS selector or @e ref" },
+          },
+          required: ["selector"],
+        },
+      },
+      {
+        name: "browser_wait_for",
+        description: "Wait for a condition to be met (element visible, network idle, or time delay).",
+        inputSchema: {
+          type: "object",
+          properties: {
+            selector: { type: "string", description: "Optional CSS selector to wait for" },
+            timeout: { type: "number", description: "Timeout in milliseconds" },
+            state: { type: "string", description: "Optional state to wait for: visible, hidden, detached" },
+          },
+        },
+      },
+      {
+        name: "browser_screenshot",
+        description: "Capture a screenshot of the current page and save it locally.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            path: { type: "string", description: "Local path to save the screenshot" },
+          },
+          required: ["path"],
+        },
+      },
+      {
+        name: "browser_close_tab",
+        description: "Close a specific browser tab.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            tabId: { type: "number", description: "Tab ID to close" },
+          },
+          required: ["tabId"],
+        },
+      },
+      {
+        name: "browser_list_tabs",
+        description: "List all open browser tabs and their titles/URLs.",
+        inputSchema: { type: "object", properties: {} },
+      },
+      {
+        name: "browser_evaluate",
+        description: "Execute custom Javascript on the active page and get the returned result.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            code: { type: "string", description: "Javascript expression to execute" },
+          },
+          required: ["code"],
+        },
+      },
+      {
+        name: "os_click",
+        description: "Perform an OS-level mouse click at exact screen coordinates (x, y) via PowerShell.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            x: { type: "number", description: "Screen X coordinate" },
+            y: { type: "number", description: "Screen Y coordinate" },
+          },
+          required: ["x", "y"],
+        },
+      },
+      {
+        name: "os_screenshot",
+        description: "Capture a full screenshot of the primary monitor using OS APIs and save it locally.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            path: { type: "string", description: "Absolute path to save screenshot (e.g. C:\\temp\\screen.png)" },
+          },
+          required: ["path"],
+        },
+      },
+      {
+        name: "os_hotkey",
+        description: "Press a keyboard shortcut/hotkey combination (e.g. ['ctrl', 't'] or ['alt', 'tab']).",
+        inputSchema: {
+          type: "object",
+          properties: {
+            keys: { type: "array", items: { type: "string" }, description: "Array of key strings, e.g., ['ctrl', 'shift', 't']" },
+          },
+          required: ["keys"],
         },
       },
     ],
@@ -100,14 +240,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
     }
 
-    if (name === "browser_navigate") {
-      const payload = { action: "navigate", args: { url: args.url } };
+    // Proxy browser tool calls directly to the WebBridge POST /command endpoint
+    if (name.startsWith("browser_")) {
+      const actionName = name.replace("browser_", "");
+      const payload = { action: actionName, args: args || {} };
       const data = await callWebBridge("/command", "POST", payload);
       return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
     }
 
-    if (name === "browser_evaluate") {
-      const payload = { action: "evaluate", args: { code: args.code, _tabId: args.tabId } };
+    // Proxy OS-level actions to the daemon which resolves them natively
+    if (name.startsWith("os_")) {
+      let actionName = name;
+      if (name === "os_hotkey") actionName = "hotkey"; // Map to daemon's 'hotkey' action
+      const payload = { action: actionName, args: args || {} };
       const data = await callWebBridge("/command", "POST", payload);
       return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
     }

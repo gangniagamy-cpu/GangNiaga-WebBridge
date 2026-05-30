@@ -114,6 +114,20 @@ var background=(function(){
   }
 
   // A. Self-Healing Helpers using Gemini Nano (window.ai)
+  async function reportSelfHealing(domain, originalSelector, healedSelector, healedIndex, tag) {
+    if (!domain) return;
+    try {
+      await fetch('http://127.0.0.1:10087/sites/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain, originalSelector, healedSelector, healedIndex, tag })
+      });
+      console.log(`[self-healing] reported healing to daemon: ${originalSelector} -> ${healedSelector}`);
+    } catch (e) {
+      console.warn('[self-healing] failed to report to daemon:', e);
+    }
+  }
+
   async function trySelfHealingClick(selector) {
     if (typeof ai === 'undefined' || !ai.languageModel) return null;
     try {
@@ -151,18 +165,50 @@ Which index is the closest semantic match to the intended action? Reply with ONL
       let matchedIndex = parseInt(answer, 10);
       if (!isNaN(matchedIndex) && matchedIndex >= 0) {
         let clickExpr = `(() => {
+          function getUniqueSelector(el) {
+            if (el.id) return '#' + el.id;
+            let path = [];
+            while (el && el.nodeType === 1) {
+              let selector = el.tagName.toLowerCase();
+              let sib = el, sibIndex = 1;
+              while (sib = sib.previousElementSibling) {
+                if (sib.tagName === el.tagName) sibIndex++;
+              }
+              selector += ':nth-of-type(' + sibIndex + ')';
+              path.unshift(selector);
+              el = el.parentNode;
+            }
+            return path.join(' > ');
+          }
           const els = Array.from(document.querySelectorAll('a, button, input, select, textarea, [role="button"], [role="link"], [contenteditable]'));
           const el = els[${matchedIndex}];
           if (!el) return { error: 'healed element not found at index ${matchedIndex}' };
           el.scrollIntoView({ block: 'center' });
           el.click();
-          return { success: true, healed: true, originalSelector: ${JSON.stringify(selector)}, index: ${matchedIndex}, tag: el.tagName, text: el.textContent?.slice(0, 100) };
+          return { 
+            success: true, 
+            healed: true, 
+            originalSelector: ${JSON.stringify(selector)}, 
+            healedSelector: getUniqueSelector(el),
+            index: ${matchedIndex}, 
+            tag: el.tagName, 
+            text: el.textContent?.slice(0, 100) 
+          };
         })()`;
         let clickParams = { expression: clickExpr, returnByValue: true };
         if (ctxId !== undefined) clickParams.contextId = ctxId;
         let clickRes = await a(`Runtime.evaluate`, clickParams);
         let val = clickRes.result?.value;
-        if (val && !val.error) return val;
+        if (val && !val.error) {
+          let domain = '';
+          if (activeTab && activeTab.url) {
+            try { domain = new URL(activeTab.url).hostname; } catch {}
+          }
+          if (domain && val.healedSelector) {
+            reportSelfHealing(domain, val.originalSelector, val.healedSelector, val.index, val.tag);
+          }
+          return val;
+        }
       }
     } catch (err) {
       console.warn('[self-healing] click failed:', err);
@@ -207,17 +253,49 @@ Which index is the closest semantic match to the target input field? Reply with 
       let matchedIndex = parseInt(answer, 10);
       if (!isNaN(matchedIndex) && matchedIndex >= 0) {
         let fillExpr = `(() => {
+          function getUniqueSelector(el) {
+            if (el.id) return '#' + el.id;
+            let path = [];
+            while (el && el.nodeType === 1) {
+              let selector = el.tagName.toLowerCase();
+              let sib = el, sibIndex = 1;
+              while (sib = sib.previousElementSibling) {
+                if (sib.tagName === el.tagName) sibIndex++;
+              }
+              selector += ':nth-of-type(' + sibIndex + ')';
+              path.unshift(selector);
+              el = el.parentNode;
+            }
+            return path.join(' > ');
+          }
           const els = Array.from(document.querySelectorAll('input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]), textarea, [contenteditable]'));
           const el = els[${matchedIndex}];
           if (!el) return { error: 'healed element not found at index ${matchedIndex}' };
           ${O(`el`, value)}
-          return { success: true, healed: true, originalSelector: ${JSON.stringify(selector)}, index: ${matchedIndex}, tag: el.tagName, mode: el.isContentEditable ? 'contenteditable' : 'value' };
+          return { 
+            success: true, 
+            healed: true, 
+            originalSelector: ${JSON.stringify(selector)}, 
+            healedSelector: getUniqueSelector(el),
+            index: ${matchedIndex}, 
+            tag: el.tagName, 
+            mode: el.isContentEditable ? 'contenteditable' : 'value' 
+          };
         })()`;
         let fillParams = { expression: fillExpr, returnByValue: true };
         if (ctxId !== undefined) fillParams.contextId = ctxId;
         let fillRes = await a(`Runtime.evaluate`, fillParams);
         let val = fillRes.result?.value;
-        if (val && !val.error) return val;
+        if (val && !val.error) {
+          let domain = '';
+          if (activeTab && activeTab.url) {
+            try { domain = new URL(activeTab.url).hostname; } catch {}
+          }
+          if (domain && val.healedSelector) {
+            reportSelfHealing(domain, val.originalSelector, val.healedSelector, val.index, val.tag);
+          }
+          return val;
+        }
       }
     } catch (err) {
       console.warn('[self-healing] fill failed:', err);
