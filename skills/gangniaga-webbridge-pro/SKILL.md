@@ -32,6 +32,15 @@ When establishing a WebSocket connection, pass the token as a query parameter:
 ws://127.0.0.1:10087/ws?token=<your_api_key>
 ```
 
+### 🐧 WSL (Windows Subsystem for Linux) Configuration
+If running inside a WSL terminal/agent environment, the daemon runs on the Windows host, and the Windows filesystem is mounted under `/mnt/d/`:
+1.  **Locating the API Key**: Read the API key from `/mnt/d/GangNiaga-WebBridge/daemon/.webbridge-auth.json`.
+2.  **Daemon Endpoint**: Do NOT connect to `127.0.0.1`. Instead, determine the Windows host gateway IP inside WSL by running:
+    ```bash
+    HOST_IP=$(ip route show default | awk '{print $3}')
+    ```
+    Connect to `http://${HOST_IP}:10087` for HTTP requests, and `ws://${HOST_IP}:10087/ws?token=<your_api_key>` for WebSockets.
+
 ---
 
 ## 📡 2. Core REST Endpoints
