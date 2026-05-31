@@ -3,7 +3,7 @@
     "gangniaga-webbridge": {
       "command": "node",
       "args": [
-        "D:\\GangNiaga-WebBridge\\mcp-server\\index.js"
+        "D:/GangNiaga-WebBridge/mcp-server/index.js"
       ]
     }
   }
