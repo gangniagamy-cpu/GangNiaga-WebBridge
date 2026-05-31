@@ -1,6 +1,6 @@
 ---
 name: gangniaga-site-mapper
-description: "Advanced skill for autonomous agents to dynamically scan, map, and generate Site Knowledge YAML files for the GangNiaga WebBridge."
+description: 'Advanced skill for autonomous agents to dynamically scan, map, and generate Site Knowledge YAML files for the GangNiaga WebBridge.'
 ---
 
 # 🎼 GANGNIAGA SITE MAPPER PROTOCOL (AUTONOMOUS YAML GENERATION)
@@ -14,7 +14,9 @@ You are the **GangNiaga Site Mapper**. Your job is to eliminate manual work for 
 If a site's YAML file is missing or outdated, execute this sequence:
 
 ### 1. Open the Target Site
+
 Use the WebBridge API to navigate to the target site.
+
 ```bash
 curl -X POST http://127.0.0.1:10087/command \
   -H "Content-Type: application/json" \
@@ -22,13 +24,17 @@ curl -X POST http://127.0.0.1:10087/command \
 ```
 
 ### 2. Retrieve Page Structure / AXTree Snapshot
+
 Send a snapshot command to the WebBridge to retrieve the simplified Accessibility Tree (AXTree) representing the interactive page elements.
+
 ```bash
 curl -X POST http://127.0.0.1:10087/command \
   -H "Content-Type: application/json" \
   -d '{"action": "snapshot", "args": {}}'
 ```
-*Alternatively, inject a DOM scanner using `evaluate`:*
+
+_Alternatively, inject a DOM scanner using `evaluate`:_
+
 ```bash
 curl -X POST http://127.0.0.1:10087/command \
   -H "Content-Type: application/json" \
@@ -41,12 +47,15 @@ curl -X POST http://127.0.0.1:10087/command \
 ```
 
 ### 3. Analyze and Structure CSS Selectors
+
 Analyze the elements or AXTree structure. Identify the most critical elements for automation (e.g., "Post Button", "Search Bar", "Upload Input"). Formulate robust CSS selectors for them based on their IDs or unique attributes (prefer IDs, unique parent relationships, and `data-` attributes over volatile classes).
 
 ### 4. Save the YAML File directly inside the Daemon Sites Directory
-Write the structured data directly into a `.yaml` file inside the `D:\GangNiaga-WebBridge\daemon\sites\` directory (or `/mnt/d/GangNiaga-WebBridge/daemon/sites/` if running from inside WSL). 
 
-*Example PowerShell command you can run to save it (on Windows host):*
+Write the structured data directly into a `.yaml` file inside the `D:\GangNiaga-WebBridge\daemon\sites\` directory (or `/mnt/d/GangNiaga-WebBridge/daemon/sites/` if running from inside WSL).
+
+_Example PowerShell command you can run to save it (on Windows host):_
+
 ```powershell
 $yaml = @"
 domain: "tiktok.com"
@@ -67,7 +76,8 @@ recipes:
 Set-Content -Path "D:\GangNiaga-WebBridge\daemon\sites\tiktok.com.yaml" -Value $yaml -Encoding UTF8
 ```
 
-*Example bash command to save it (if running inside WSL):*
+_Example bash command to save it (if running inside WSL):_
+
 ```bash
 cat << 'EOF' > /mnt/d/GangNiaga-WebBridge/daemon/sites/tiktok.com.yaml
 domain: "tiktok.com"
@@ -91,7 +101,7 @@ EOF
 
 ## 🎯 Rules of Engagement
 
--   **WSL Support**: If running inside WSL, use the Windows host gateway IP (`$(ip route show default | awk '{print $3}')`) to make curl requests to `http://${HOST_IP}:10087/command` instead of `127.0.0.1`.
--   **Write to the correct Daemon path:** The site rules must be stored in `D:\GangNiaga-WebBridge\daemon\sites\<domain>.yaml` (or `/mnt/d/GangNiaga-WebBridge/daemon/sites/<domain>.yaml` on WSL) so the WebBridge daemon's `/sites/` API endpoint can find and serve it immediately to other agents in the future.
--   **Proactive Mapping:** If the user says "Automate Canva", do not wait for instructions to create the rules. Say "Mapping Canva layout..." and generate the YAML file immediately.
--   **Incremental Updates:** If a selector in an existing YAML config breaks, use the `POST /sites/update` API endpoint to automatically persist the healed selector.
+- **WSL Support**: If running inside WSL, use the Windows host gateway IP (`$(ip route show default | awk '{print $3}')`) to make curl requests to `http://${HOST_IP}:10087/command` instead of `127.0.0.1`.
+- **Write to the correct Daemon path:** The site rules must be stored in `D:\GangNiaga-WebBridge\daemon\sites\<domain>.yaml` (or `/mnt/d/GangNiaga-WebBridge/daemon/sites/<domain>.yaml` on WSL) so the WebBridge daemon's `/sites/` API endpoint can find and serve it immediately to other agents in the future.
+- **Proactive Mapping:** If the user says "Automate Canva", do not wait for instructions to create the rules. Say "Mapping Canva layout..." and generate the YAML file immediately.
+- **Incremental Updates:** If a selector in an existing YAML config breaks, use the `POST /sites/update` API endpoint to automatically persist the healed selector.

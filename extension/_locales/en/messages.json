@@ -35,14 +35,20 @@
   "devSave": { "message": "Save" },
   "devReset": { "message": "Reset to default" },
   "devTestOk": { "message": "Connection OK" },
-  "devTestFailed": { "message": "Connection failed — check address, network, and that the daemon is running" },
+  "devTestFailed": {
+    "message": "Connection failed — check address, network, and that the daemon is running"
+  },
   "devSaved": { "message": "Saved — reconnecting…" },
   "devUrlEmpty": { "message": "URL cannot be empty" },
   "devUrlInvalid": { "message": "Invalid URL format" },
   "devUrlWrongProtocol": { "message": "URL must start with ws:// or wss://" },
   "devTrustWarningTitle": { "message": "This server will gain control of your browser" },
-  "devTrustWarningBody": { "message": "It can click, type, read page contents, and operate tabs. Only continue if you fully trust this server." },
-  "devTrustWarningInsecure": { "message": "⚠ Connection is unencrypted (ws://) — anyone on the same network can monitor or tamper with traffic." },
+  "devTrustWarningBody": {
+    "message": "It can click, type, read page contents, and operate tabs. Only continue if you fully trust this server."
+  },
+  "devTrustWarningInsecure": {
+    "message": "⚠ Connection is unencrypted (ws://) — anyone on the same network can monitor or tamper with traffic."
+  },
   "devTrustCancel": { "message": "Cancel" },
   "devTrustConfirm": { "message": "I trust this — connect" }
 }

@@ -9,7 +9,8 @@ Panduan ini menerangkan cara mengintegrasikan **GangNiaga WebBridge** Chrome Ext
 **Claude Code** adalah terminal CLI berkuasa AI yang dibina oleh Anthropic. Ia boleh melaksanakan tugasan tempatan termasuk menulis fail dan menjalankan command.
 
 ### Bagaimana Claude Code Mengawal Browser Anda:
-1. Apabila anda meminta Claude Code melayari web (contoh: *"Fiddle with Shopee checkout page"*), Claude Code memerlukan ejen automasi.
+
+1. Apabila anda meminta Claude Code melayari web (contoh: _"Fiddle with Shopee checkout page"_), Claude Code memerlukan ejen automasi.
 2. Dengan menjalankan **GangNiaga WebBridge Daemon** (pada port `10087`), Claude Code boleh menghantar arahan CDP (Chrome DevTools Protocol) secara langsung ke pelayar Chrome anda melalui daemon tersebut.
 3. Anda hanya perlu memastikan daemon berjalan di latar belakang:
    ```bash
@@ -24,7 +25,9 @@ Panduan ini menerangkan cara mengintegrasikan **GangNiaga WebBridge** Chrome Ext
 **Cursor** adalah editor kod AI yang menyokong ejen bersepadu. Anda boleh membina **Custom System Prompt** di dalam tetapan Cursor (Settings -> Features -> Rules for AI) untuk membolehkan ejen Cursor menulis skrip automasi yang menghantar arahan terus ke GangNiaga WebBridge.
 
 ### Contoh System Rules untuk Cursor Agent:
+
 Masukkan arahan berikut dalam Rules for AI anda:
+
 > "You have access to a local browser automation bridge called **GangNiaga WebBridge** running on `ws://127.0.0.1:10087/ws`. When asked to inspect a webpage, you should write and execute Node.js scripts using the `ws` package to send JSON tool calls. The browser automation protocols and tool schemas are detailed in [integrations/README.md](file:///D:/GangNiaga-WebBridge/integrations/README.md)."
 
 ---
@@ -38,15 +41,16 @@ Anda adalah Ejen Automasi Browser. Anda berkomunikasi dengan browser pengguna me
 Setiap tindakan mestilah dihantar dalam format JSON `tool_call` yang sah:
 
 {
-  "type": "tool_call",
-  "requestId": "ID_RAWAK_UNIK",
-  "payload": {
-    "name": "NAMA_TOOL",
-    "args": { ... }
-  }
+"type": "tool_call",
+"requestId": "ID_RAWAK_UNIK",
+"payload": {
+"name": "NAMA_TOOL",
+"args": { ... }
+}
 }
 
 Senarai NAMA_TOOL yang disokong oleh GangNiaga WebBridge:
+
 1. `navigate` (url, newTab) - Melayari url
 2. `click` (selector) - Klik element (auto self-healing jika kelas berubah!)
 3. `fill` (selector, value) - Mengisi input teks

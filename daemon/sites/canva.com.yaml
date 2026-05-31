@@ -1,6 +1,6 @@
-domain: "canva.com"
-name: "Canva"
-description: "Graphic design platform"
+domain: 'canva.com'
+name: 'Canva'
+description: 'Graphic design platform'
 selectors:
   login_button: "button[data-testid='header-login-button']"
   signup_button: "button[data-testid='header-signup-button']"
@@ -8,9 +8,9 @@ selectors:
   create_design_btn: "button[data-testid='create-design-button']"
 recipes:
   search_templates:
-    description: "Search for design templates on Canva"
+    description: 'Search for design templates on Canva'
     steps:
       - action: fill
         selector: "input[type='search'][placeholder*='design']"
       - action: hotkey
-        keys: ["enter"]
+        keys: ['enter']

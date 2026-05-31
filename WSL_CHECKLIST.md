@@ -1,4 +1,4 @@
-# ✅ WSL Setup Checklist - Hermes Agent
+# ✅ WSL Setup Checklist - WebBridge Test Agent
 
 ## Pre-Setup Requirements
 
@@ -11,20 +11,23 @@
 ## Windows Setup (One Time)
 
 ### Extension Installation
+
 - [ ] Install extension from `chrome://extensions/`
 - [ ] Enable developer mode
 - [ ] Load unpacked from `extension/` folder
 - [ ] Reload extension in Chrome
 
 ### Registry & Daemon Setup
+
 - [ ] Run `install.bat` (registers native messaging)
 - [ ] Run daemon: `npm run daemon`
 - [ ] Copy API key from daemon output
 - [ ] Verify daemon at `http://localhost:10087` (from Windows) or `http://<WIN_HOST_IP>:10087/status` (from WSL)
 
 ### MCP & Skills (Optional)
+
 - [ ] Run `setup-mcp.bat` (for Claude Desktop)
-- [ ] Run `install-skills.bat` (for Hermes-Agent)
+- [ ] Run `install-skills.bat` (for Test Agent)
 
 ## WSL Setup (One Time)
 
@@ -32,14 +35,14 @@
 - [ ] Navigate to: `cd /mnt/d/GangNiaga-WebBridge`
 - [ ] Run: `bash wsl-setup.sh`
 - [ ] Reload shell: `source ~/.bashrc`
-- [ ] Verify: `command -v hermes` (should output node path)
+- [ ] Verify: `command -v hermes-agent-aku` (should output node path)
 
 ## Configuration (One Time)
 
 - [ ] Copy `.env.wsl` to `.env`
 - [ ] Update `.env` with:
   - [ ] `GANGNIAGA_API_KEY=<from-daemon-output>`
-  - [ ] `DAEMON_HOST=` (leave empty so `hermes-agent-wsl.js` auto-detects Windows IP)
+  - [ ] `DAEMON_HOST=` (leave empty so `test-agent-aku.js` auto-detects Windows IP)
   - [ ] `DAEMON_PORT=10087`
 - [ ] Test connection from WSL: `curl http://$(ip route show default | awk '{print $3}'):10087/status`
 
@@ -55,56 +58,60 @@
 
 ```bash
 # WSL Terminal - These work forever after setup:
-hermes              # Automated workflow
-hermes-i            # Interactive mode
-npm run hermes      # Alternative
-npm run hermes:interactive
+hermes-agent-aku       # Automated workflow
+hermes-agent-aku-i     # Interactive mode
+npm run hermes-agent-aku         # Alternative (Windows/WSL)
+npm run hermes-agent-aku:interactive
 ```
 
 ## Troubleshooting Checklist
 
 ### Daemon not accessible
+
 - [ ] Daemon running on Windows? (`npm run daemon`)
 - [ ] Port 10087 open in firewall?
 - [ ] WSL2 network enabled?
 - [ ] API key correct in `.env`?
 
-### Hermes not found
+### Ejen not found
+
 - [ ] WSL setup script ran? (`bash wsl-setup.sh`)
 - [ ] Shell reloaded? (`source ~/.bashrc`)
-- [ ] Check alias: `alias | grep hermes`
+- [ ] Check alias: `alias | grep hermes-agent-aku`
 
 ### API key issues
+
 - [ ] Regenerate: `node daemon/config.js`
 - [ ] Update `.env` with new key
-- [ ] Restart hermes
+- [ ] Restart agent
 
 ### Network issues
+
 - [ ] Check connection from Windows: `curl http://localhost:10087/status`
 - [ ] Check connection from WSL: `curl http://$(ip route show default | awk '{print $3}'):10087/status`
 - [ ] Check WSL Host IP inside WSL: `ip route show default`
 
 ## File Locations
 
-| File | Purpose | Location |
-|------|---------|----------|
-| `.env` | Configuration | `d:\GangNiaga-WebBridge\.env` |
-| `hermes-agent-wsl.js` | Hermes agent | `d:\GangNiaga-WebBridge\hermes-agent-wsl.js` |
-| `wsl-setup.sh` | Setup script | `d:\GangNiaga-WebBridge\wsl-setup.sh` |
-| `start-daemon.bat` | Daemon launcher | `d:\GangNiaga-WebBridge\start-daemon.bat` |
-| `WSL_SETUP.md` | Full guide | `d:\GangNiaga-WebBridge\WSL_SETUP.md` |
+| File                | Purpose          | Location                                   |
+| ------------------- | ---------------- | ------------------------------------------ |
+| `.env`              | Configuration    | `d:\GangNiaga-WebBridge\.env`              |
+| `test-agent-aku.js` | Local Test agent | `d:\GangNiaga-WebBridge\test-agent-aku.js` |
+| `wsl-setup.sh`      | Setup script     | `d:\GangNiaga-WebBridge\wsl-setup.sh`      |
+| `start-daemon.bat`  | Daemon launcher  | `d:\GangNiaga-WebBridge\start-daemon.bat`  |
+| `WSL_SETUP.md`      | Full guide       | `d:\GangNiaga-WebBridge\WSL_SETUP.md`      |
 
 ## Quick Status Check
 
 ```bash
 # Check if everything is ready
-echo "Daemon?" && curl -s http://localhost:10087 | head -1
-echo "Hermes?" && which node && npm run hermes --help
+echo "Daemon?" && curl -s http://localhost:10087/status | head -1
+echo "Agent?" && which node && npm run hermes-agent-aku --help
 echo "Config?" && cat .env | grep GANGNIAGA_API_KEY
 ```
 
 ---
 
-**🎉 Once all items are checked, WSL setup is complete and Hermes can run indefinitely without re-setup!**
+**🎉 Once all items are checked, WSL setup is complete and Hermes-Agent-Aku can run indefinitely without re-setup!**
 
 See [WSL_SETUP.md](WSL_SETUP.md) for detailed troubleshooting.

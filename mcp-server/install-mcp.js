@@ -6,14 +6,14 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log("=========================================");
-console.log("🤖 GANGNIAGA MCP SERVER AUTO-INSTALLER");
-console.log("=========================================\n");
+console.log('=========================================');
+console.log('🤖 GANGNIAGA MCP SERVER AUTO-INSTALLER');
+console.log('=========================================\n');
 
 const targetConfigs = [
   path.join(os.homedir(), 'AppData', 'Roaming', 'Claude', 'claude_desktop_config.json'),
   path.join(os.homedir(), '.hermes', 'mcp_config.json'),
-  path.join(__dirname, '..', 'test_mcp_config.json')
+  path.join(__dirname, '..', 'test_mcp_config.json'),
 ];
 
 const yamlConfigPath = path.join(os.homedir(), '.hermes', 'config.yaml');
@@ -38,9 +38,9 @@ for (const configPath of targetConfigs) {
     if (!config.mcpServers) config.mcpServers = {};
 
     // Inject GangNiaga MCP Server
-    config.mcpServers["gangniaga-webbridge"] = {
-      command: "node",
-      args: [path.join(__dirname, 'index.js').replace(/\\/g, '/')]
+    config.mcpServers['gangniaga-webbridge'] = {
+      command: 'node',
+      args: [path.join(__dirname, 'index.js').replace(/\\/g, '/')],
     };
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
@@ -99,7 +99,9 @@ try {
 }
 
 if (installedCount > 0) {
-  console.log("\n🎉 Pemasangan Selesai! Sila restart AI Agent / Claude Desktop anda.");
+  console.log('\n🎉 Pemasangan Selesai! Sila restart AI Agent / Claude Desktop anda.');
 } else {
-  console.log("\n⚠️ Tiada konfigurasi AI dijumpai. Anda mungkin perlu masukkan JSON/YAML secara manual.");
+  console.log(
+    '\n⚠️ Tiada konfigurasi AI dijumpai. Anda mungkin perlu masukkan JSON/YAML secara manual.',
+  );
 }

@@ -62,7 +62,7 @@ const controllers = new Set();
 
 // Track pending HTTP and WebSocket requests
 const pendingHttpRequests = new Map(); // requestId -> HTTP response object
-const pendingWsRequests = new Map();   // requestId -> Controller socket object
+const pendingWsRequests = new Map(); // requestId -> Controller socket object
 
 // Native Messaging state
 let isNative = process.argv.includes('--native');
@@ -93,7 +93,7 @@ if (isNative) {
     },
     close: () => {
       process.exit(0);
-    }
+    },
   };
 }
 
@@ -134,7 +134,7 @@ function runPowerShell(script) {
     const buffer = Buffer.from(script, 'utf16le');
     const base64 = buffer.toString('base64');
     const cmd = `powershell.exe -NoProfile -NonInteractive -EncodedCommand ${base64}`;
-    
+
     exec(cmd, (error, stdout, _stderr) => {
       if (error) {
         reject(error);
@@ -202,30 +202,79 @@ async function handleHotkey(keys) {
 }
 
 const ALLOWED_ACTIONS = new Set([
-  'navigate', 'click', 'fill', 'mouse_click', 'snapshot', 'scroll', 'hover',
-  'wait_for', 'wait_for_network_idle', 'close_tab', 'get_tabs', 'list_tabs', 'evaluate',
-  'frame_switch', 'handle_dialog', 'os_screenshot', 'os_click', 'hotkey',
-  'key_type', 'send_keys', 'screenshot', 'save_as_pdf', 'upload', 'network', 'cdp', 'extract_text',
-  'select_option', 'drag_drop', 'double_click', 'right_click', 'focus', 'clear_field',
-  'check_checkbox', 'get_page_source', 'query_selector_all', 'get_cookies', 'set_cookie',
-  'local_storage', 'block_urls', 'set_user_agent', 'emulate_device', 'set_geolocation',
-  'inject_css', 'page_hash', 'performance_metrics', 'get_attribute', 'set_attribute',
-  'console_log', 'iframe_switch', 'extract_links', 'extract_forms', 'extract_meta',
-  'extract_table', 'youtube_transcript', 'swarm_broadcast', 'swarm_read',
-  'auto_organize_tabs', 'cross_tab_extract', 'local_ai', 'local_summarize'
+  'navigate',
+  'click',
+  'fill',
+  'mouse_click',
+  'snapshot',
+  'scroll',
+  'hover',
+  'wait_for',
+  'wait_for_network_idle',
+  'close_tab',
+  'get_tabs',
+  'list_tabs',
+  'evaluate',
+  'frame_switch',
+  'handle_dialog',
+  'os_screenshot',
+  'os_click',
+  'hotkey',
+  'key_type',
+  'send_keys',
+  'screenshot',
+  'save_as_pdf',
+  'upload',
+  'network',
+  'cdp',
+  'extract_text',
+  'select_option',
+  'drag_drop',
+  'double_click',
+  'right_click',
+  'focus',
+  'clear_field',
+  'check_checkbox',
+  'get_page_source',
+  'query_selector_all',
+  'get_cookies',
+  'set_cookie',
+  'local_storage',
+  'block_urls',
+  'set_user_agent',
+  'emulate_device',
+  'set_geolocation',
+  'inject_css',
+  'page_hash',
+  'performance_metrics',
+  'get_attribute',
+  'set_attribute',
+  'console_log',
+  'iframe_switch',
+  'extract_links',
+  'extract_forms',
+  'extract_meta',
+  'extract_table',
+  'youtube_transcript',
+  'swarm_broadcast',
+  'swarm_read',
+  'auto_organize_tabs',
+  'cross_tab_extract',
+  'local_ai',
+  'local_summarize',
 ]);
 
 // Process action request (either OS-level or routes to Browser Extension)
 async function processAction(action, args, onResult) {
   let actionLower = action.toLowerCase();
-  
+
   // Intercept extract_text and map it to evaluate
   if (actionLower === 'extract_text') {
     action = 'evaluate';
     actionLower = 'evaluate';
     args = { code: 'document.body.innerText' };
   }
-  
+
   // 1. Whitelist validation
   if (!ALLOWED_ACTIONS.has(actionLower)) {
     onResult({ success: false, error: `Action "${action}" is not whitelisted.` });
@@ -261,7 +310,10 @@ async function processAction(action, args, onResult) {
       onResult({ success: false, error: err.message });
     }
   } else if (actionLower === 'hotkey') {
-    if (!Array.isArray(args.keys) || args.keys.some(k => typeof k !== 'string' || k.length > 20 || /[;&|`']/g.test(k))) {
+    if (
+      !Array.isArray(args.keys) ||
+      args.keys.some((k) => typeof k !== 'string' || k.length > 20 || /[;&|`']/g.test(k))
+    ) {
       onResult({ success: false, error: 'Invalid or unsafe hotkey parameters.' });
       return;
     }
@@ -297,30 +349,43 @@ async function processAction(action, args, onResult) {
         return await new Promise((resolve, reject) => {
           const req = http.get('http://127.0.0.1:9222/json', (res) => {
             let data = '';
-            res.on('data', chunk => data += chunk);
+            res.on('data', (chunk) => (data += chunk));
             res.on('end', () => {
               try {
                 const tabs = JSON.parse(data);
-                resolve(tabs.map(t => ({
-                  title: t.title || '',
-                  url: t.url || '',
-                  id: t.id || '',
-                  type: t.type || 'tab'
-                })).filter(t => t.url && !t.url.startsWith('chrome://')));
-              } catch (e) { reject(e); }
+                resolve(
+                  tabs
+                    .map((t) => ({
+                      title: t.title || '',
+                      url: t.url || '',
+                      id: t.id || '',
+                      type: t.type || 'tab',
+                    }))
+                    .filter((t) => t.url && !t.url.startsWith('chrome://')),
+                );
+              } catch (e) {
+                reject(e);
+              }
             });
           });
           req.on('error', () => reject(new Error('CDP not available')));
-          req.setTimeout(3000, () => { req.destroy(); reject(new Error('CDP timeout')); });
+          req.setTimeout(3000, () => {
+            req.destroy();
+            reject(new Error('CDP timeout'));
+          });
         });
       })().catch(async () => {
         // Fallback: Use PowerShell to get window titles (no URL info)
-        const script = "Get-Process chrome -ErrorAction SilentlyContinue | Where-Object {$_.MainWindowTitle -ne ''} | ForEach-Object { $_.MainWindowTitle + ' | PID:' + $_.Id }";
+        const script =
+          "Get-Process chrome -ErrorAction SilentlyContinue | Where-Object {$_.MainWindowTitle -ne ''} | ForEach-Object { $_.MainWindowTitle + ' | PID:' + $_.Id }";
         const psResult = await runPowerShell(script);
-        return psResult.split('\n').filter(t => t.trim()).map(t => {
-          const parts = t.split(' | PID:');
-          return { title: parts[0]?.trim(), pid: parts[1]?.trim(), url: '', id: '' };
-        });
+        return psResult
+          .split('\n')
+          .filter((t) => t.trim())
+          .map((t) => {
+            const parts = t.split(' | PID:');
+            return { title: parts[0]?.trim(), pid: parts[1]?.trim(), url: '', id: '' };
+          });
       });
       onResult({ success: true, data: result });
     } catch (err) {
@@ -351,8 +416,8 @@ async function processAction(action, args, onResult) {
       requestId: requestId,
       payload: {
         name: action,
-        args: args
-      }
+        args: args,
+      },
     };
 
     // Store callback
@@ -367,7 +432,7 @@ async function processAction(action, args, onResult) {
       resolve: (data) => {
         clearTimeout(timeout);
         onResult(data);
-      }
+      },
     });
 
     const encryptedPayload = tunnel ? tunnel.encrypt(toolCall) : toolCall;
@@ -380,7 +445,11 @@ const server = http.createServer((req, res) => {
   // Add CORS headers
   const origin = req.headers.origin;
   if (origin) {
-    if (origin.startsWith('chrome-extension://') || origin.startsWith('http://127.0.0.1') || origin.startsWith('http://localhost')) {
+    if (
+      origin.startsWith('chrome-extension://') ||
+      origin.startsWith('http://127.0.0.1') ||
+      origin.startsWith('http://localhost')
+    ) {
       res.setHeader('Access-Control-Allow-Origin', origin);
     } else {
       res.setHeader('Access-Control-Allow-Origin', 'null');
@@ -396,17 +465,23 @@ const server = http.createServer((req, res) => {
   }
 
   // Public status/health checking
-  const isStatusCheck = req.method === 'GET' && (req.url.startsWith('/status') || req.url.startsWith('/health'));
+  const isStatusCheck =
+    req.method === 'GET' && (req.url.startsWith('/status') || req.url.startsWith('/health'));
   if (isStatusCheck) {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
-      ok: true,
-      running: true,
-      extension_connected: !!(extensionSocket && (extensionSocket.readyState === 1 || extensionSocket.readyState === (WebSocket.OPEN || 1))),
-      version: "2.0",
-      auth_active: !!apiKey,
-      uptime_seconds: process.uptime()
-    }));
+    res.end(
+      JSON.stringify({
+        ok: true,
+        running: true,
+        extension_connected: !!(
+          extensionSocket &&
+          (extensionSocket.readyState === 1 || extensionSocket.readyState === (WebSocket.OPEN || 1))
+        ),
+        version: '2.0',
+        auth_active: !!apiKey,
+        uptime_seconds: process.uptime(),
+      }),
+    );
     return;
   }
 
@@ -428,7 +503,12 @@ const server = http.createServer((req, res) => {
 
     if (requestToken !== apiKey) {
       res.writeHead(401, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: 'Unauthorized. Missing or invalid Authorization Bearer token.' }));
+      res.end(
+        JSON.stringify({
+          ok: false,
+          error: 'Unauthorized. Missing or invalid Authorization Bearer token.',
+        }),
+      );
       return;
     }
   }
@@ -436,7 +516,7 @@ const server = http.createServer((req, res) => {
   // Phase 3: Sites Knowledge API
   if (req.method === 'POST' && req.url === '/sites/update') {
     let body = '';
-    req.on('data', chunk => {
+    req.on('data', (chunk) => {
       body += chunk.toString();
     });
     req.on('end', () => {
@@ -448,13 +528,13 @@ const server = http.createServer((req, res) => {
           res.end(JSON.stringify({ ok: false, error: 'Missing or invalid domain.' }));
           return;
         }
-        
+
         const fs = require('fs');
         const path = require('path');
         const sitesDir = path.join(__dirname, 'sites');
         if (!fs.existsSync(sitesDir)) fs.mkdirSync(sitesDir);
         const filePath = path.join(sitesDir, `${domain}.yaml`);
-        
+
         let fileContent = '';
         if (fs.existsSync(filePath)) {
           fileContent = fs.readFileSync(filePath, 'utf8');
@@ -466,13 +546,13 @@ const server = http.createServer((req, res) => {
         const lines = fileContent.split('\n');
         const entryKey = `  ${originalSelector}:`;
         const entryValue = ` "${healedSelector.replace(/"/g, '\\"')}" # healed index ${healedIndex} (${tag})`;
-        
-        let keyIndex = lines.findIndex(l => l.startsWith(entryKey));
+
+        let keyIndex = lines.findIndex((l) => l.startsWith(entryKey));
         if (keyIndex !== -1) {
           lines[keyIndex] = `${entryKey}${entryValue}`;
         } else {
           // Find selectors section
-          let selIndex = lines.findIndex(l => l.startsWith('selectors:'));
+          let selIndex = lines.findIndex((l) => l.startsWith('selectors:'));
           if (selIndex !== -1) {
             lines.splice(selIndex + 1, 0, `${entryKey}${entryValue}`);
           } else {
@@ -480,15 +560,19 @@ const server = http.createServer((req, res) => {
             lines.push(`${entryKey}${entryValue}`);
           }
         }
-        
+
         fs.writeFileSync(filePath, lines.join('\n'), 'utf8');
-        console.log(`[daemon] Persisted healed selector for ${domain}: ${originalSelector} -> ${healedSelector}`);
-        
+        console.log(
+          `[daemon] Persisted healed selector for ${domain}: ${originalSelector} -> ${healedSelector}`,
+        );
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, message: 'Healed selector persisted successfully.' }));
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: 'Failed to update site rule.', details: err.message }));
+        res.end(
+          JSON.stringify({ ok: false, error: 'Failed to update site rule.', details: err.message }),
+        );
       }
     });
     return;
@@ -498,13 +582,13 @@ const server = http.createServer((req, res) => {
     const fs = require('fs');
     const path = require('path');
     const sitesDir = path.join(__dirname, 'sites');
-    
+
     if (req.url === '/sites' || req.url === '/sites/') {
       // List all sites
       try {
         if (!fs.existsSync(sitesDir)) fs.mkdirSync(sitesDir);
-        const files = fs.readdirSync(sitesDir).filter(f => f.endsWith('.yaml'));
-        const domains = files.map(f => f.replace('.yaml', ''));
+        const files = fs.readdirSync(sitesDir).filter((f) => f.endsWith('.yaml'));
+        const domains = files.map((f) => f.replace('.yaml', ''));
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, domains }));
       } catch (e) {
@@ -537,7 +621,7 @@ const server = http.createServer((req, res) => {
 
   if (req.method === 'POST' && req.url === '/command') {
     let body = '';
-    req.on('data', chunk => {
+    req.on('data', (chunk) => {
       body += chunk.toString();
     });
     req.on('end', async () => {
@@ -568,7 +652,9 @@ const server = http.createServer((req, res) => {
         });
       } catch (err) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: 'Invalid JSON request.', details: err.message }));
+        res.end(
+          JSON.stringify({ ok: false, error: 'Invalid JSON request.', details: err.message }),
+        );
       }
     });
   } else {
@@ -584,7 +670,7 @@ server.on('upgrade', (request, socket, head) => {
   // Origin-based lock for extension, token auth for other controller connections
   const origin = request.headers['origin'] || '';
   const isExtension = origin.startsWith('chrome-extension://');
-  
+
   if (apiKey && !isExtension) {
     try {
       const url = new URL(request.url, `http://${request.headers.host || '127.0.0.1'}`);
@@ -636,8 +722,12 @@ wss.on('connection', (ws) => {
     if (msg.type === 'hello') {
       isExtension = true;
       extensionSocket = ws;
-      console.log(`[ws] Chrome Extension registered successfully (v${msg.payload?.extensionVersion})`);
-      ws.send(JSON.stringify(tunnel ? tunnel.encrypt({ type: 'hello_ack' }) : { type: 'hello_ack' }));
+      console.log(
+        `[ws] Chrome Extension registered successfully (v${msg.payload?.extensionVersion})`,
+      );
+      ws.send(
+        JSON.stringify(tunnel ? tunnel.encrypt({ type: 'hello_ack' }) : { type: 'hello_ack' }),
+      );
       return;
     }
 
@@ -682,15 +772,21 @@ wss.on('connection', (ws) => {
         console.log(`[ws] Controller sent tool call: ${msg.payload?.name} (${reqId})`);
 
         if (!extensionSocket || extensionSocket.readyState !== WebSocket.OPEN) {
-          ws.send(JSON.stringify(tunnel ? tunnel.encrypt({
-            type: 'tool_result',
-            responseToRequestId: reqId,
-            payload: { error: 'Chrome Extension not connected' }
-          }) : {
-            type: 'tool_result',
-            responseToRequestId: reqId,
-            payload: { error: 'Chrome Extension not connected' }
-          }));
+          ws.send(
+            JSON.stringify(
+              tunnel
+                ? tunnel.encrypt({
+                    type: 'tool_result',
+                    responseToRequestId: reqId,
+                    payload: { error: 'Chrome Extension not connected' },
+                  })
+                : {
+                    type: 'tool_result',
+                    responseToRequestId: reqId,
+                    payload: { error: 'Chrome Extension not connected' },
+                  },
+            ),
+          );
           return;
         }
 
@@ -701,15 +797,21 @@ wss.on('connection', (ws) => {
           if (pendingWsRequests.has(reqId)) {
             pendingWsRequests.delete(reqId);
             if (ws.readyState === WebSocket.OPEN) {
-              ws.send(JSON.stringify(tunnel ? tunnel.encrypt({
-                type: 'tool_result',
-                responseToRequestId: reqId,
-                payload: { success: false, error: 'Command execution timed out.' }
-              }) : {
-                type: 'tool_result',
-                responseToRequestId: reqId,
-                payload: { success: false, error: 'Command execution timed out.' }
-              }));
+              ws.send(
+                JSON.stringify(
+                  tunnel
+                    ? tunnel.encrypt({
+                        type: 'tool_result',
+                        responseToRequestId: reqId,
+                        payload: { success: false, error: 'Command execution timed out.' },
+                      })
+                    : {
+                        type: 'tool_result',
+                        responseToRequestId: reqId,
+                        payload: { success: false, error: 'Command execution timed out.' },
+                      },
+                ),
+              );
             }
             console.warn(`[ws] Request ${reqId} timed out, cleaned up`);
           }
@@ -754,7 +856,9 @@ wss.on('connection', (ws) => {
 server.on('error', (e) => {
   if (e.code === 'EADDRINUSE') {
     if (isNative) {
-      console.warn(`[http] Port ${PORT} already in use. Another daemon instance is likely handling HTTP traffic. Continuing in Native relay mode.`);
+      console.warn(
+        `[http] Port ${PORT} already in use. Another daemon instance is likely handling HTTP traffic. Continuing in Native relay mode.`,
+      );
     } else {
       console.error(`[http] Port ${PORT} already in use. Cannot start standalone daemon.`);
       process.exit(1);
@@ -782,25 +886,25 @@ server.listen(PORT, '0.0.0.0', () => {
 if (isNative) {
   let chunks = [];
   let chunkLen = 0;
-  
+
   process.stdin.on('readable', () => {
     let chunk;
     while ((chunk = process.stdin.read()) !== null) {
       chunks.push(chunk);
       chunkLen += chunk.length;
-      
+
       while (chunkLen >= 4) {
         let buffer = Buffer.concat(chunks);
         let msgLen = buffer.readUInt32LE(0);
-        
+
         if (chunkLen >= 4 + msgLen) {
           let msgBuffer = buffer.subarray(4, 4 + msgLen);
           let msgString = msgBuffer.toString('utf8');
-          
+
           try {
             let parsed = JSON.parse(msgString);
             if (tunnel) parsed = tunnel.decrypt(parsed);
-            
+
             if (parsed.type === 'tool_result' && parsed.responseToRequestId) {
               const reqId = parsed.responseToRequestId;
               if (pendingHttpRequests.has(reqId)) {
@@ -818,7 +922,7 @@ if (isNative) {
           } catch (e) {
             // Ignore parse errors on native stream
           }
-          
+
           chunks = [buffer.subarray(4 + msgLen)];
           chunkLen = chunks[0].length;
         } else {
@@ -827,7 +931,7 @@ if (isNative) {
       }
     }
   });
-  
+
   process.stdin.on('end', () => {
     process.exit(0);
   });

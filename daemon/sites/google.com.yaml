@@ -1,17 +1,17 @@
-domain: "google.com"
-name: "Google"
-description: "Google Search engine — general search, text, images, news."
+domain: 'google.com'
+name: 'Google'
+description: 'Google Search engine — general search, text, images, news.'
 selectors:
   search_input: "textarea[name='q'], input[name='q']"
   search_button: "input[value='Google Search'], button[aria-label='Google Search']"
-  results: "#search .g"
+  results: '#search .g'
 recipes:
   search:
-    description: "Search for a query on Google"
+    description: 'Search for a query on Google'
     steps:
       - action: fill
         selector: "textarea[name='q'], input[name='q']"
       - action: click
         selector: "input[value='Google Search'], button[aria-label='Google Search']"
       - action: wait_for
-        selector: "#search .g"
+        selector: '#search .g'

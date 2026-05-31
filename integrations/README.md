@@ -39,23 +39,25 @@ const wss = new WebSocketServer({ port: 10087, path: '/ws' });
 
 console.log('GangNiaga WebBridge Daemon running on ws://127.0.0.1:10087/ws');
 
-wss.on('connection', ws => {
+wss.on('connection', (ws) => {
   console.log('Chrome Extension connected successfully!');
-  
+
   // Contoh menghantar tool_call untuk melayari laman web shopee
   setTimeout(() => {
     console.log('Sending navigate command...');
-    ws.send(JSON.stringify({
-      type: 'tool_call',
-      requestId: 'req-navigate-1',
-      payload: {
-        name: 'navigate',
-        args: { url: 'https://shopee.com.my' }
-      }
-    }));
+    ws.send(
+      JSON.stringify({
+        type: 'tool_call',
+        requestId: 'req-navigate-1',
+        payload: {
+          name: 'navigate',
+          args: { url: 'https://shopee.com.my' },
+        },
+      }),
+    );
   }, 2000);
 
-  ws.on('message', message => {
+  ws.on('message', (message) => {
     const data = JSON.parse(message.toString());
     console.log('Received from Extension:', JSON.stringify(data, null, 2));
   });

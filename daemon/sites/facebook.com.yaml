@@ -1,18 +1,18 @@
-domain: "facebook.com"
-name: "Facebook"
-description: "Social media platform"
+domain: 'facebook.com'
+name: 'Facebook'
+description: 'Social media platform'
 selectors:
-  email_input: "input#email"
-  pass_input: "input#pass"
+  email_input: 'input#email'
+  pass_input: 'input#pass'
   login_button: "button[name='login']"
   status_input: "div[role='combobox'][aria-label*='on your mind']"
   post_button: "div[role='button'][aria-label='Post']"
 recipes:
   post_status:
-    description: "Create a text post on Facebook"
+    description: 'Create a text post on Facebook'
     steps:
       - action: navigate
-        url: "https://www.facebook.com"
+        url: 'https://www.facebook.com'
       - action: fill
         selector: "div[role='combobox'][aria-label*='on your mind']"
       - action: click

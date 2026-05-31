@@ -2,9 +2,7 @@
   "mcpServers": {
     "gangniaga-webbridge": {
       "command": "node",
-      "args": [
-        "D:/GangNiaga-WebBridge/mcp-server/index.js"
-      ]
+      "args": ["D:/GangNiaga-WebBridge/mcp-server/index.js"]
     }
   }
 }

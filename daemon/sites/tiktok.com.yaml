@@ -1,6 +1,6 @@
-domain: "tiktok.com"
-name: "TikTok"
-description: "Short-form video sharing platform"
+domain: 'tiktok.com'
+name: 'TikTok'
+description: 'Short-form video sharing platform'
 selectors:
   login_link: "a[data-e2e='top-login-button']"
   search_input: "input[data-e2e='search-user-input']"
@@ -9,7 +9,7 @@ selectors:
   caption_editor: "div.public-DraftEditor-content[role='textbox']"
 recipes:
   search_tiktok:
-    description: "Search for a user or video on TikTok"
+    description: 'Search for a user or video on TikTok'
     steps:
       - action: fill
         selector: "input[data-e2e='search-user-input']"

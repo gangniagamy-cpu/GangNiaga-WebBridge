@@ -20,10 +20,12 @@ const validator = {
   // Validate domain format to prevent path traversal and shell injection.
   isValidDomain(domain) {
     if (typeof domain !== 'string') return false;
-    return /^[a-zA-Z0-9.-]+$/.test(domain) &&
-           domain.length > 0 &&
-           domain.length <= 253 &&
-           !domain.includes('..');
+    return (
+      /^[a-zA-Z0-9.-]+$/.test(domain) &&
+      domain.length > 0 &&
+      domain.length <= 253 &&
+      !domain.includes('..')
+    );
   },
 
   // Validate CSS selector to prevent script injection in selectors.
@@ -49,7 +51,7 @@ const validator = {
     ];
 
     const normalized = selector.toLowerCase();
-    return !dangerous.some(d => normalized.includes(d));
+    return !dangerous.some((d) => normalized.includes(d));
   },
 
   // Validate JavaScript code (eval protection checks).
@@ -76,7 +78,7 @@ const validator = {
     ];
 
     const normalized = code.replace(/\s+/g, ' ').toLowerCase();
-    return !dangerous.some(d => normalized.includes(d));
+    return !dangerous.some((d) => normalized.includes(d));
   },
 
   // Validate tab ID format.
@@ -86,8 +88,7 @@ const validator = {
 
   // Validate screen coordinates for clicks.
   isValidCoordinate(x, y) {
-    return Number.isInteger(x) && Number.isInteger(y) &&
-           x >= 0 && y >= 0 && x < 10000 && y < 10000;
+    return Number.isInteger(x) && Number.isInteger(y) && x >= 0 && y >= 0 && x < 10000 && y < 10000;
   },
 };
 

@@ -26,12 +26,15 @@ OPENCLAW_E2EE_SECRET="your_shared_e2ee_secret_key"
 ## 🚀 2. Mengaktifkan Sambungan Ejen OpenClaw
 
 ### Pilihan A: Sambungan Tempatan (Local WebSocket Daemon)
+
 1. Jalankan daemon OpenClaw tempatan pada port `10087`. Ejen akan membuka WebSocket server untuk menunggu extension menyambung.
 2. Buka Chrome, klik ikon **GangNiaga WebBridge** dan pastikan status bertukar menjadi **Ready (Connected)**.
 3. Ejen anda kini boleh memanggil tool automasi (seperti `click`, `fill`, atau `snapshot`) secara telus.
 
 ### Pilihan B: Sambungan Cloud Relay (Secure Bridge)
+
 Jika ejen anda dihoskan di internet (cloud) dan anda mahu mengawal browser tempatan di laptop anda:
+
 1. Buka **GangNiaga WebBridge Popup UI** di browser anda.
 2. Buka **Advanced Settings** dan setkan URL WebSocket Cloud Relay:
    `wss://operator.gangniaga.my/puspa-bridge?secret=your_shared_e2ee_secret_key`

@@ -3,11 +3,11 @@
 // Original minified version preserved as background.min.js
 //
 // Architecture:
-//   - Daemon WebSocket connection management
-//   - Chrome Debugger Protocol (CDP) tool execution
-//   - Anti-bot safety checks & self-healing via Gemini Nano
-//   - End-to-end encryption (AES-256-GCM)
-//   - Tab management & grouping
+// - Daemon WebSocket connection management
+// - Chrome Debugger Protocol (CDP) tool execution
+// - Anti-bot safety checks & self-healing via Gemini Nano
+// - End-to-end encryption (AES-256-GCM)
+// - Tab management & grouping
 
 // ═══════════════════════════════════════════════════════════════
 // NOTE: This is a reference/documentation version.
@@ -15,7 +15,7 @@
 // To modify: edit minified source, test, then re-minify.
 // ═══════════════════════════════════════════════════════════════
 
-/*
+/\*
 Key Components (from minified source):
 
 1. STATE MANAGEMENT
@@ -34,9 +34,9 @@ Key Components (from minified source):
 
 3. SAFETY SYSTEM
    - isSensitiveAction(selector): Check if click/fill targets sensitive action
-     * Checks selector keywords: pay, buy, checkout, submit, purchase, etc.
-     * Checks page URL for sensitive paths
-     * Deep DOM inspection of element properties
+     - Checks selector keywords: pay, buy, checkout, submit, purchase, etc.
+     - Checks page URL for sensitive paths
+     - Deep DOM inspection of element properties
 
 4. AI SELF-HEALING
    - trySelfHealingClick(selector): Use Gemini Nano to find closest element
@@ -87,7 +87,7 @@ Key Components (from minified source):
    - fillInput: Fill by selector with React compatibility
    - scrollTo: Scroll to coordinates
    - getPageStructure: Headings, sections, nav links
-*/
+     \*/
 
 // The production minified code is in background.js
 // This file serves as documentation. To activate this version:

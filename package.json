@@ -5,8 +5,8 @@
   "scripts": {
     "daemon": "node daemon/gangniaga-daemon.js",
     "mcp": "node mcp-server/index.js",
-    "hermes": "node hermes-agent-wsl.js",
-    "hermes:interactive": "node hermes-agent-wsl.js --interactive",
+    "hermes-agent-aku": "node test-agent-aku.js",
+    "hermes-agent-aku:interactive": "node test-agent-aku.js --interactive",
     "lint": "eslint \"**/*.js\" --max-warnings=0",
     "format": "prettier --write \"**/*.{js,json,md,yaml,yml}\"",
     "test": "jest"

@@ -1,14 +1,14 @@
-domain: "shopee.com.my"
-name: "Shopee Malaysia"
-description: "E-commerce platform in Malaysia"
+domain: 'shopee.com.my'
+name: 'Shopee Malaysia'
+description: 'E-commerce platform in Malaysia'
 selectors:
-  search_input: "input.shopee-searchbar-input__input"
-  search_button: "button.btn-solid-primary"
+  search_input: 'input.shopee-searchbar-input__input'
+  search_button: 'button.btn-solid-primary'
 recipes:
   search_item:
-    description: "Search for an item on Shopee"
+    description: 'Search for an item on Shopee'
     steps:
       - action: fill
-        selector: "input.shopee-searchbar-input__input"
+        selector: 'input.shopee-searchbar-input__input'
       - action: click
-        selector: "button.btn-solid-primary"
+        selector: 'button.btn-solid-primary'

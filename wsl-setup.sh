@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# WSL Setup for Hermes Agent
+# WSL Setup for WebBridge Test Harness
 # One-time setup to enable all features from WSL
 
 set -e
 
-echo "🤖 GangNiaga Hermes Agent - WSL Setup"
-echo "======================================"
+echo "🤖 GangNiaga WebBridge Test Harness - WSL Setup"
+echo "================================================="
 
 # Check if WSL
 if ! grep -qi microsoft /proc/version 2>/dev/null; then
@@ -62,12 +62,12 @@ fi
 
 # Step 5: Create alias for easy access
 ALIAS_BLOCK='
-# GangNiaga Hermes Agent
+# GangNiaga Local Test Agent
 export GANGNIAGA_DIR="/mnt/d/GangNiaga-WebBridge"
-alias hermes-agent-aku="cd \$GANGNIAGA_DIR && node hermes-agent-wsl.js"
-alias hermes-agent-aku-i="cd \$GANGNIAGA_DIR && node hermes-agent-wsl.js --interactive"
-alias Hermes-Agent-Aku="cd \$GANGNIAGA_DIR && node hermes-agent-wsl.js"
-alias Hermes-Agent-Aku-i="cd \$GANGNIAGA_DIR && node hermes-agent-wsl.js --interactive"
+alias hermes-agent-aku="cd \$GANGNIAGA_DIR && node test-agent-aku.js"
+alias hermes-agent-aku-i="cd \$GANGNIAGA_DIR && node test-agent-aku.js --interactive"
+alias Hermes-Agent-Aku="cd \$GANGNIAGA_DIR && node test-agent-aku.js"
+alias Hermes-Agent-Aku-i="cd \$GANGNIAGA_DIR && node test-agent-aku.js --interactive"
 '
 
 # Update .bashrc

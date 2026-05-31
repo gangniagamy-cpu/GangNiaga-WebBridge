@@ -14,6 +14,7 @@ To allow the bridge to capture your authenticated session, cookies, and window c
 4. Select the `D:\GangNiaga-WebBridge\extension` directory of this repository.
 
 ### 🖼️ Step 1 Visual Walkthrough
+
 ![Step 1: Chrome Extension Setup](images/step1_chrome_extension_setup.png)
 
 ---
@@ -30,6 +31,7 @@ The Native Messaging Host lets Chrome launch the Node.js daemon automatically. I
    ```
 
 ### 🖼️ Step 2 Visual Walkthrough
+
 ![Step 2: Daemon Activation](images/step2_daemon_activation.png)
 
 ---
@@ -43,4 +45,5 @@ Expose the WebBridge commands to your local AI Agent or Claude Desktop client us
 3. Launch your AI client. The agent will automatically detect the **18 browser control tools** and start piloting your browser.
 
 ### 🖼️ Step 3 Visual Walkthrough
+
 ![Step 3: AI Agent Connection](images/step3_ai_agent_integration.png)

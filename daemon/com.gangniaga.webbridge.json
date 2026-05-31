@@ -1,11 +1,11 @@
 {
-    "name":  "com.gangniaga.webbridge",
-    "description":  "GangNiaga WebBridge Native Host",
-    "path":  "D:\\GangNiaga-WebBridge\\daemon\\native-wrapper.bat",
-    "type":  "stdio",
-    "allowed_origins":  [
-                            "chrome-extension://hinhmbbmelmmgiehkfmmkmfndadahmkk/",
-                            "chrome-extension://jelniggicmclhfgnlapbkgfibmgelfnp/",
-                            "chrome-extension://nmmhkkegccagdldgiimedpiccmgmieda/"
-                        ]
+  "name": "com.gangniaga.webbridge",
+  "description": "GangNiaga WebBridge Native Host",
+  "path": "D:\\GangNiaga-WebBridge\\daemon\\native-wrapper.bat",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://hinhmbbmelmmgiehkfmmkmfndadahmkk/",
+    "chrome-extension://jelniggicmclhfgnlapbkgfibmgelfnp/",
+    "chrome-extension://nmmhkkegccagdldgiimedpiccmgmieda/"
+  ]
 }

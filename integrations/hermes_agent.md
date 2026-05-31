@@ -22,7 +22,7 @@ import websockets
 
 async def handle_client(websocket, path):
     print("[hermes] GangNiaga WebBridge Extension connected!")
-    
+
     # 1. Hantar arahan navigasi ke Shopee selepas 2 saat
     await asyncio.sleep(2)
     navigate_cmd = {
@@ -43,7 +43,7 @@ async def handle_client(websocket, path):
     async for message in websocket:
         data = json.loads(message)
         print(f"[hermes] Received: {json.dumps(data, indent=2)}")
-        
+
         # Contoh: Jika navigasi berjaya, jalankan carian asnaf
         if data.get("type") == "tool_result" and data.get("responseToRequestId") == "req-1":
             print("[hermes] Navigation complete. Requesting search fill...")
@@ -77,6 +77,7 @@ if __name__ == "__main__":
 Untuk keselamatan Zero-Trust di mana skrip Python berada di cloud, anda boleh menggunakan modul `cryptography` Python untuk menyulitkan payload sebelum dihantar ke GangNiaga WebBridge.
 
 Pastikan library cryptography dipasang:
+
 ```bash
 pip install cryptography
 ```
@@ -99,7 +100,7 @@ class E2EETunnel:
         plain_text = json.dumps(data_dict).encode('utf-8')
         iv = os.urandom(12)  # 12 bytes IV
         ciphertext = self.aesgcm.encrypt(iv, plain_text, None)
-        
+
         # Gabungkan IV + Ciphertext (Web Crypto tag ada di akhir ciphertext secara terbina)
         combined = iv + ciphertext
         base64_data = base64.b64encode(combined).decode('utf-8')
@@ -108,11 +109,11 @@ class E2EETunnel:
     def decrypt(self, encrypted_dict: dict) -> dict:
         if not encrypted_dict.get("encrypted"):
             return encrypted_dict
-        
+
         combined = base64.b64decode(encrypted_dict["data"])
         iv = combined[:12]
         ciphertext = combined[12:]
-        
+
         decrypted = self.aesgcm.decrypt(iv, ciphertext, None)
         return json.loads(decrypted.decode('utf-8'))
 ```

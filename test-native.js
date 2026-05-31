@@ -15,11 +15,11 @@ child.stdout.on('readable', () => {
   }
 });
 
-child.stderr.on('data', data => console.error('[Daemon Log]', data.toString()));
-child.on('close', code => console.log('Daemon exited with code', code));
+child.stderr.on('data', (data) => console.error('[Daemon Log]', data.toString()));
+child.on('close', (code) => console.log('Daemon exited with code', code));
 
 // Send a test message
-const payload = Buffer.from(JSON.stringify({ text: "test" }), 'utf8');
+const payload = Buffer.from(JSON.stringify({ text: 'test' }), 'utf8');
 const header = Buffer.alloc(4);
 header.writeUInt32LE(payload.length, 0);
 child.stdin.write(header);
