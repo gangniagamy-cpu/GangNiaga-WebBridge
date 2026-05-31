@@ -69,6 +69,7 @@ curl http://localhost:10087/sites/shopee.com.my
 
 Full API docs: see `skills/gangniaga-webbridge-pro/SKILL.md`
 For running the agent, see `skills/hermes-agent-wsl/SKILL.md` (WSL) and `skills/hermes-agent-windows/SKILL.md` (Windows).
+For the complete A-Z setup tutorial and troubleshooting in Malay, see `docs/TUTORIAL_AZ.md`.
 
 ---
 
