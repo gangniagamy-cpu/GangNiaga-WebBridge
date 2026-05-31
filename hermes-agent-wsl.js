@@ -20,7 +20,7 @@ const DAEMON_HOST = (() => {
       if (procVersion.toLowerCase().includes('microsoft')) {
         const ip = execSync("ip route show default | awk '{print $3}'", { encoding: 'utf8' }).trim();
         if (ip) {
-          console.log(`[Hermes] WSL detected, using Windows host IP: ${ip}`);
+          console.log(`[GangNiaga] WSL detected, using Windows host IP: ${ip}`);
           return ip;
         }
       }
@@ -46,7 +46,7 @@ const LOG_LEVEL = process.env.HERMES_LOG_LEVEL || 'info';
 
 // Color output helpers
 const log = {
-  info: (msg) => console.log(`\x1b[36m[Hermes]\x1b[0m ${msg}`),
+  info: (msg) => console.log(`\x1b[36m[GangNiaga]\x1b[0m ${msg}`),
   success: (msg) => console.log(`\x1b[32m✅\x1b[0m ${msg}`),
   error: (msg) => console.log(`\x1b[31m❌\x1b[0m ${msg}`),
   warn: (msg) => console.log(`\x1b[33m⚠️\x1b[0m ${msg}`),
@@ -196,7 +196,7 @@ async function testDaemonConnection() {
  * Autonomous Hermes workflow
  */
 async function runHermesWorkflow() {
-  log.info(`Starting Hermes autonomous agent workflow...`);
+  log.info(`Starting GangNiaga autonomous agent workflow...`);
   
   // Test connection
   const connected = await testDaemonConnection();
@@ -283,7 +283,7 @@ async function interactiveMode() {
   
   const prompt = (question) => new Promise(resolve => rl.question(question, resolve));
   
-  log.info(`Hermes Agent - Interactive Mode`);
+  log.info(`GangNiaga Agent - Interactive Mode`);
   log.info(`Commands: sites, load, run, screenshot, exit\n`);
   
   const connected = await testDaemonConnection();
