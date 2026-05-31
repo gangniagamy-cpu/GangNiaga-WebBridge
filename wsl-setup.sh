@@ -73,19 +73,31 @@ alias Hermes-Agent-Aku-i="cd \$GANGNIAGA_DIR && node test-agent-aku.js --interac
 # Update .bashrc
 BASHRC="$HOME/.bashrc"
 if [ -f "$BASHRC" ]; then
-  if ! grep -q "hermes-agent-aku" "$BASHRC" 2>/dev/null; then
-    echo "📌 Adding hermes-agent-aku command alias to .bashrc..."
-    echo "$ALIAS_BLOCK" >> "$BASHRC"
-  fi
+  # Clean up old aliases first
+  sed -i '/hermes-agent-wsl.js/d' "$BASHRC"
+  sed -i '/hermes-agent-aku/d' "$BASHRC"
+  sed -i '/Hermes-Agent-Aku/d' "$BASHRC"
+  sed -i '/# GangNiaga Hermes Agent/d' "$BASHRC"
+  sed -i '/# GangNiaga Local Test Agent/d' "$BASHRC"
+  sed -i '/GANGNIAGA_DIR/d' "$BASHRC"
+
+  echo "📌 Adding hermes-agent-aku command alias to .bashrc..."
+  echo "$ALIAS_BLOCK" >> "$BASHRC"
 fi
 
 # Update .zshrc
 ZSHRC="$HOME/.zshrc"
 if [ -f "$ZSHRC" ]; then
-  if ! grep -q "hermes-agent-aku" "$ZSHRC" 2>/dev/null; then
-    echo "📌 Adding hermes-agent-aku command alias to .zshrc..."
-    echo "$ALIAS_BLOCK" >> "$ZSHRC"
-  fi
+  # Clean up old aliases first
+  sed -i '/hermes-agent-wsl.js/d' "$ZSHRC"
+  sed -i '/hermes-agent-aku/d' "$ZSHRC"
+  sed -i '/Hermes-Agent-Aku/d' "$ZSHRC"
+  sed -i '/# GangNiaga Hermes Agent/d' "$ZSHRC"
+  sed -i '/# GangNiaga Local Test Agent/d' "$ZSHRC"
+  sed -i '/GANGNIAGA_DIR/d' "$ZSHRC"
+
+  echo "📌 Adding hermes-agent-aku command alias to .zshrc..."
+  echo "$ALIAS_BLOCK" >> "$ZSHRC"
 fi
 
 echo "   Reload shell: source ~/.bashrc or source ~/.zshrc"
