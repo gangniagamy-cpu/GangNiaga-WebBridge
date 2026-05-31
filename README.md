@@ -1,5 +1,7 @@
 <div align="center">
 
+![GangNiaga WebBridge Banner](docs/images/gangniaga_banner.png)
+
 # ⚡ GangNiaga WebBridge v2.5
 ### *The Sovereign Browser Control Bridge for Autonomous AI Agents*
 
