@@ -23,8 +23,11 @@ Atau double-click: `start-daemon.bat`
 
 **Expected output:**
 ```
-🚀 [WebBridge] Daemon running on http://localhost:10087
-✅ [Auth] API Key generated: xxx...
+===========================================================
+  GangNiaga WebBridge Daemon running on Port 10087
+  Listening at http://0.0.0.0:10087 & ws://0.0.0.0:10087/ws
+  E2EE Encryption is INACTIVE
+===========================================================
 ```
 
 ### Step 2: Setup WSL (One Time Only)
@@ -127,8 +130,9 @@ From WSL, Hermes can:
 ### Daemon not accessible
 
 ```bash
-# Test connection from WSL
-curl -X GET http://localhost:10087/sites/shopee.com.my
+# Test connection from WSL using the Windows Host IP
+WIN_HOST_IP=$(ip route show default | awk '{print $3}')
+curl -s -X GET http://${WIN_HOST_IP}:10087/status
 ```
 
 If fails:
@@ -149,12 +153,10 @@ GANGNIAGA_API_KEY=new-key-here
 ### WSL2 network issues
 
 ```bash
-# Check WSL2 IP
-wsl hostname -I
-
-# Use IP instead of localhost if needed
-DAEMON_HOST=172.x.x.x
+# Check Windows Host IP manually inside WSL
+ip route show default | awk '{print $3}'
 ```
+By default, the setup auto-detects this IP when `DAEMON_HOST` is left blank in `.env`. You can manually specify this IP in `.env` if the auto-detection fails.
 
 ## 📝 Run Multiple Domains
 

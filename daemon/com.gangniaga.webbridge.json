@@ -4,6 +4,8 @@
     "path":  "D:\\GangNiaga-WebBridge\\daemon\\native-wrapper.bat",
     "type":  "stdio",
     "allowed_origins":  [
-                            "chrome-extension://hinhmbbmelmmgiehkfmmkmfndadahmkk/"
+                            "chrome-extension://hinhmbbmelmmgiehkfmmkmfndadahmkk/",
+                            "chrome-extension://jelniggicmclhfgnlapbkgfibmgelfnp/",
+                            "chrome-extension://nmmhkkegccagdldgiimedpiccmgmieda/"
                         ]
 }

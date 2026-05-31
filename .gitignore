@@ -7,3 +7,13 @@ daemon-native.log
 .webbridge-auth.json
 .idea/
 .vscode/
+coverage/
+facebook-mcp-server/node_modules/
+*.log
+screenshots/
+chunks/
+.DS_Store
+Thumbs.db
+daemon/config/
+.chrome-profile/
+.antigravitycli/

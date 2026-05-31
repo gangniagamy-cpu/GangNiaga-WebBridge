@@ -79,8 +79,9 @@ curl http://localhost:10087
 
 **WSL connection issues?**
 ```bash
-# Check if localhost:10087 is accessible
-timeout 2 bash -c 'echo > /dev/tcp/localhost/10087' && echo OK
+# Get Windows Host IP dynamically and check connection
+WIN_HOST_IP=$(ip route show default | awk '{print $3}')
+timeout 2 bash -c "echo > /dev/tcp/$WIN_HOST_IP/10087" && echo "OK (Connected to Windows Daemon)"
 ```
 
 ## 📚 Advanced

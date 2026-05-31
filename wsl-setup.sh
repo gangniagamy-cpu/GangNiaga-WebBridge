@@ -25,11 +25,22 @@ if ! command -v node &> /dev/null; then
 fi
 echo "✅ Node.js: $(node --version)"
 
-# Step 2: Copy .env from example
+# Step 2: Copy .env from template
+WSL_DIR="/mnt/d/GangNiaga-WebBridge"
+cd "$WSL_DIR"
+
 if [ ! -f .env ]; then
   echo "📝 Creating .env file..."
-  cp .env.example .env
-  echo "⚠️  Edit .env to set your API key!"
+  cp .env.wsl .env
+  # Auto-populate API key from auth file
+  if [ -f daemon/.webbridge-auth.json ]; then
+    API_KEY=$(node -e "console.log(JSON.parse(require('fs').readFileSync('daemon/.webbridge-auth.json','utf8')).apiKey)" 2>/dev/null)
+    if [ -n "$API_KEY" ]; then
+      sed -i "s/your-api-key-here/$API_KEY/" .env
+      echo "✅ API key auto-populated from auth file"
+    fi
+  fi
+  echo "⚠️  Review .env and adjust if needed"
 fi
 
 # Step 3: Install dependencies
@@ -38,25 +49,44 @@ npm install --silent
 
 # Step 4: Test daemon connection
 echo "🔗 Testing daemon connection..."
-if timeout 2 bash -c "echo > /dev/tcp/localhost/10087" 2>/dev/null; then
-  echo "✅ Daemon is accessible!"
+WIN_HOST_IP=$(ip route show default | awk '{print $3}')
+if timeout 3 bash -c "echo > /dev/tcp/$WIN_HOST_IP/10087" 2>/dev/null; then
+  echo "✅ Daemon is accessible via Windows IP ($WIN_HOST_IP)!"
+elif timeout 3 bash -c "echo > /dev/tcp/localhost/10087" 2>/dev/null; then
+  echo "✅ Daemon is accessible via localhost!"
 else
   echo "⚠️  Daemon not running. Start it on Windows first:"
-  echo "   cd d:\\GangNiaga-WebBridge && npm run daemon"
+  echo "   cd D:\\GangNiaga-WebBridge && npm run daemon"
+  echo "   Or: start.bat"
 fi
 
 # Step 5: Create alias for easy access
-BASHRC="$HOME/.bashrc"
-if ! grep -q "hermes-agent-wsl" "$BASHRC"; then
-  echo "📌 Adding hermes command alias..."
-  cat >> "$BASHRC" << 'EOF'
-
+ALIAS_BLOCK='
 # GangNiaga Hermes Agent
-alias hermes='node /mnt/d/GangNiaga-WebBridge/hermes-agent-wsl.js'
-alias hermes-i='node /mnt/d/GangNiaga-WebBridge/hermes-agent-wsl.js --interactive'
-EOF
-  echo "   Reload shell: source ~/.bashrc"
+export GANGNIAGA_DIR="/mnt/d/GangNiaga-WebBridge"
+alias hermes="cd \$GANGNIAGA_DIR && node hermes-agent-wsl.js"
+alias hermes-i="cd \$GANGNIAGA_DIR && node hermes-agent-wsl.js --interactive"
+'
+
+# Update .bashrc
+BASHRC="$HOME/.bashrc"
+if [ -f "$BASHRC" ]; then
+  if ! grep -q "hermes-agent-wsl" "$BASHRC" 2>/dev/null; then
+    echo "📌 Adding hermes command alias to .bashrc..."
+    echo "$ALIAS_BLOCK" >> "$BASHRC"
+  fi
 fi
+
+# Update .zshrc
+ZSHRC="$HOME/.zshrc"
+if [ -f "$ZSHRC" ]; then
+  if ! grep -q "hermes-agent-wsl" "$ZSHRC" 2>/dev/null; then
+    echo "📌 Adding hermes command alias to .zshrc..."
+    echo "$ALIAS_BLOCK" >> "$ZSHRC"
+  fi
+fi
+
+echo "   Reload shell: source ~/.bashrc or source ~/.zshrc"
 
 echo ""
 echo "✨ Setup complete!"
@@ -66,4 +96,5 @@ echo "  hermes              - Run Hermes workflow"
 echo "  hermes-i            - Interactive mode"
 echo ""
 echo "Make sure daemon is running on Windows:"
-echo "  cd d:\\GangNiaga-WebBridge && npm run daemon"
+echo "  cd D:\\GangNiaga-WebBridge && npm run daemon"
+echo "  Or just double-click start.bat"

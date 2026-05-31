@@ -5,6 +5,7 @@
 const http = require('http');
 const { exec } = require('child_process');
 const { WebSocketServer, WebSocket } = require('ws');
+const crypto = require('crypto');
 const validator = require('./utils/validator');
 const config = require('./config');
 
@@ -377,7 +378,14 @@ async function processAction(action, args, onResult) {
 // HTTP Server
 const server = http.createServer((req, res) => {
   // Add CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  if (origin) {
+    if (origin.startsWith('chrome-extension://') || origin.startsWith('http://127.0.0.1') || origin.startsWith('http://localhost')) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', 'null');
+    }
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 

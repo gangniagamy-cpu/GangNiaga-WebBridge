@@ -40,7 +40,7 @@ if %ERRORLEVEL% NEQ 0 (
   echo ✅ Native Messaging already registered
 )
 
-REM ---- Step 4: Install Chrome Extension (if not installed) ----
+REM ---- Step 4: Check Chrome Extension ----
 set EXT_DIR=%LOCALAPPDATA%\Google\Chrome\User Data\Default\Extensions\hinhmbbmelmmgiehkfmmkmfndadahmkk
 if not exist "%EXT_DIR%" (
   echo.
@@ -58,11 +58,10 @@ if not exist "%EXT_DIR%" (
 )
 
 :start_daemon
-REM ---- Step 5: Kill any existing daemon ----
-tasklist /FI "IMAGENAME eq node.exe" /FO CSV /NH 2>nul | findstr /i "gangniaga" >nul
-if %ERRORLEVEL% EQU 0 (
-  echo 🔄 Restarting existing daemon...
-  taskkill /F /IM node.exe /FI "WINDOWTITLE eq gangniaga*" 2>nul
+REM ---- Step 5: Kill any existing daemon (safe: only kill node on port 10087) ----
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":10087" ^| findstr "LISTENING"') do (
+  echo 🔄 Stopping old daemon [PID %%a]...
+  taskkill /F /PID %%a 2>nul
   timeout /t 2 /nobreak >nul
 )
 
@@ -86,7 +85,7 @@ echo  ✅ Setup complete!
 echo.
 echo  Quick commands:
 echo    npm run daemon     - Start/restart daemon
-echo    npm run mcp        - Start MCP server  
+echo    npm run mcp        - Start MCP server
 echo    npm test           - Run tests
 echo    npm run lint       - Check code quality
 echo.

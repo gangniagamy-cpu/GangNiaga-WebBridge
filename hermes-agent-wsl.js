@@ -7,10 +7,41 @@
  */
 
 require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 
-const DAEMON_HOST = process.env.DAEMON_HOST || 'localhost';
+const DAEMON_HOST = (() => {
+  if (process.env.DAEMON_HOST) return process.env.DAEMON_HOST;
+  // Auto-detect WSL: try to find Windows host IP
+  try {
+    const { execSync } = require('child_process');
+    if (require('fs').existsSync('/proc/version')) {
+      const procVersion = require('fs').readFileSync('/proc/version', 'utf8');
+      if (procVersion.toLowerCase().includes('microsoft')) {
+        const ip = execSync("ip route show default | awk '{print $3}'", { encoding: 'utf8' }).trim();
+        if (ip) {
+          console.log(`[Hermes] WSL detected, using Windows host IP: ${ip}`);
+          return ip;
+        }
+      }
+    }
+  } catch {}
+  return 'localhost';
+})();
 const DAEMON_PORT = process.env.DAEMON_PORT || 10087;
-const API_KEY = process.env.GANGNIAGA_API_KEY || 'default-key';
+const API_KEY = (() => {
+  if (process.env.GANGNIAGA_API_KEY && process.env.GANGNIAGA_API_KEY !== 'your_generated_api_key_here' && process.env.GANGNIAGA_API_KEY !== 'your-api-key-here') {
+    return process.env.GANGNIAGA_API_KEY;
+  }
+  // Fallback: read from auth file
+  const authPath = path.join(__dirname, 'daemon', '.webbridge-auth.json');
+  try {
+    return JSON.parse(fs.readFileSync(authPath, 'utf8')).apiKey;
+  } catch {
+    console.error('❌ No API key found. Set GANGNIAGA_API_KEY in .env or run daemon first.');
+    process.exit(1);
+  }
+})();
 const LOG_LEVEL = process.env.HERMES_LOG_LEVEL || 'info';
 
 // Color output helpers
@@ -113,7 +144,11 @@ async function executeCommand(action, args = {}) {
 /**
  * Get OS screenshot
  */
-async function captureScreenshot(outputPath = 'screenshot.png') {
+async function captureScreenshot(outputPath) {
+  if (!outputPath) {
+    const path = require('path');
+    outputPath = path.join(__dirname, 'screenshots', 'hermes.png');
+  }
   log.info(`Capturing screenshot...`);
   try {
     const result = await apiCall('/command', 'POST', {
@@ -134,14 +169,25 @@ async function captureScreenshot(outputPath = 'screenshot.png') {
 async function testDaemonConnection() {
   log.info(`Testing daemon connection to ${baseUrl}...`);
   try {
-    const response = await fetch(baseUrl);
-    if (response.ok) {
-      log.success(`Daemon is running!`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const response = await fetch(baseUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (response.ok || response.status === 401) {
+      log.success(`Daemon is running! (HTTP ${response.status})`);
       return true;
     }
+    log.error(`Daemon responded with unexpected status: ${response.status}`);
+    return false;
   } catch (err) {
-    log.error(`Daemon not responding. Make sure it's running on Windows:`);
-    log.error(`  cd d:\\GangNiaga-WebBridge && npm run daemon`);
+    if (err.name === 'AbortError') {
+      log.error(`Daemon connection timed out (5s). Check if daemon is running.`);
+    } else if (err.cause?.code === 'ECONNREFUSED') {
+      log.error(`Connection refused. Daemon not running on ${baseUrl}`);
+      log.error(`  Start it: cd D:\\GangNiaga-WebBridge && npm run daemon`);
+    } else {
+      log.error(`Daemon not responding: ${err.message}`);
+    }
     return false;
   }
 }
@@ -216,7 +262,7 @@ async function runHermesWorkflow() {
     await executeCommand('wait_for', { timeout: 5000 });
 
     // 6. Capture screenshot
-    await captureScreenshot('/tmp/hermes-results.png');
+    await captureScreenshot();
 
     log.success(`\n✨ Workflow completed successfully!`);
   } catch (err) {

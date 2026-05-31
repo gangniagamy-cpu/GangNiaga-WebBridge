@@ -1,13 +1,22 @@
 #!/bin/bash
 # WSL Daemon Auto-Start + Extension Config Updater
 # Run this from WSL to start daemon and auto-configure Chrome extension
+# NOTE: Does NOT mutate source files — writes runtime config instead
 
 set -e
 
 DAEMON_DIR="/mnt/d/GangNiaga-WebBridge"
 PIDFILE="/tmp/webbridge-daemon.pid"
 LOGFILE="/tmp/webbridge-daemon.log"
-WIN_HOME="/mnt/c/Users/megat"
+
+# Dynamically locate Windows user profile home directory from WSL
+WIN_USER_PROFILE=$(cmd.exe /c "echo %USERPROFILE%" 2>/dev/null | tr -d '\r')
+if [ -n "$WIN_USER_PROFILE" ]; then
+  WIN_HOME=$(wslpath "$WIN_USER_PROFILE" 2>/dev/null)
+else
+  WIN_HOME="/mnt/c/Users/$USER"
+fi
+
 DAEMON_INFO="$WIN_HOME/.hermes/webbridge-daemon.json"
 
 # Get IPs
@@ -28,15 +37,21 @@ if [ -f "$PIDFILE" ]; then
   rm -f "$PIDFILE"
 fi
 
-# ─── Update extension config with correct IPs ───
-echo "🔧 Updating extension config..."
+# ─── Write daemon URL config (no source mutation) ───
+echo "🔧 Writing daemon URL config for extension discovery..."
 cd "$DAEMON_DIR"
 
-# Replace DAEMON_URLS in background.js with current IPs
-sed -i "s|'ws://172.22.32.1:10087/ws'.*|'ws://${WIN_HOST_IP}:10087/ws',     // WSL2 Windows host gateway|" extension/background.js
-sed -i "s|'ws://172.22.39.182:10087/ws'.*|'ws://${WSL_IP}:10087/ws',     // WSL2 current IP|" extension/background.js
+mkdir -p daemon/config
+cat > daemon/config/daemon-url.json <<EOF
+{
+  "ws_url": "ws://${WIN_HOST_IP}:10087/ws",
+  "http_url": "http://${WIN_HOST_IP}:10087",
+  "wsl_ip": "${WSL_IP}",
+  "win_host_ip": "${WIN_HOST_IP}"
+}
+EOF
 
-echo "✅ Extension config updated"
+echo "✅ Daemon URL config written (extension reads this at runtime)"
 
 # ─── Start daemon ───
 echo "🚀 Starting WebBridge daemon..."
@@ -76,13 +91,9 @@ EOF
   echo "  Windows: ws://${WIN_HOST_IP}:10087/ws"
   echo "  API Key: ${API_KEY:0:16}..."
   echo ""
-  echo "  Chrome extension auto-configured."
+  echo "  Extension config written to daemon/config/daemon-url.json"
   echo "  Reload extension in chrome://extensions"
-  echo "  to connect to WSL daemon."
-  echo "═══════════════════════════════════════════"
 else
-  echo "❌ Daemon failed to start"
-  echo "Log: $LOGFILE"
-  cat "$LOGFILE"
+  echo "❌ Daemon failed to start. Check log: $LOGFILE"
   exit 1
 fi

@@ -20,7 +20,7 @@
 - [ ] Run `install.bat` (registers native messaging)
 - [ ] Run daemon: `npm run daemon`
 - [ ] Copy API key from daemon output
-- [ ] Verify daemon at `http://localhost:10087`
+- [ ] Verify daemon at `http://localhost:10087` (from Windows) or `http://<WIN_HOST_IP>:10087/status` (from WSL)
 
 ### MCP & Skills (Optional)
 - [ ] Run `setup-mcp.bat` (for Claude Desktop)
@@ -39,9 +39,9 @@
 - [ ] Copy `.env.wsl` to `.env`
 - [ ] Update `.env` with:
   - [ ] `GANGNIAGA_API_KEY=<from-daemon-output>`
-  - [ ] `DAEMON_HOST=localhost`
+  - [ ] `DAEMON_HOST=` (leave empty so `hermes-agent-wsl.js` auto-detects Windows IP)
   - [ ] `DAEMON_PORT=10087`
-- [ ] Test connection: `curl http://localhost:10087`
+- [ ] Test connection from WSL: `curl http://$(ip route show default | awk '{print $3}'):10087/status`
 
 ## Verification (One Time)
 
@@ -80,9 +80,9 @@ npm run hermes:interactive
 - [ ] Restart hermes
 
 ### Network issues
-- [ ] Check connection: `curl http://localhost:10087`
-- [ ] From WSL: `curl http://127.0.0.1:10087`
-- [ ] Check WSL2 IP: `wsl hostname -I`
+- [ ] Check connection from Windows: `curl http://localhost:10087/status`
+- [ ] Check connection from WSL: `curl http://$(ip route show default | awk '{print $3}'):10087/status`
+- [ ] Check WSL Host IP inside WSL: `ip route show default`
 
 ## File Locations
 

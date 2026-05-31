@@ -4,7 +4,8 @@ Start-Sleep -Seconds 2
 $chromePath = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 $extPath = 'D:\GangNiaga-WebBridge\extension'
 
-Start-Process $chromePath -ArgumentList "--load-extension=`"$extPath`"", "--disable-extensions-except=`"$extPath`""
+$profilePath = 'D:\GangNiaga-WebBridge\.chrome-profile'
+Start-Process $chromePath -ArgumentList "--load-extension=`"$extPath`"", "--disable-extensions-except=`"$extPath`"", "--user-data-dir=`"$profilePath`"", "--remote-debugging-port=9222", "--no-first-run", "--no-default-browser-check", "chrome://extensions"
 
 Start-Sleep -Seconds 5
 Write-Host 'Chrome started with extension loaded'

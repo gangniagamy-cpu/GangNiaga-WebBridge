@@ -1,9 +1,10 @@
 async function runHermesTest() {
-  // Read API key from daemon auth file
+  // Read API key from daemon auth file (relative path for cross-platform)
   const fs = require('fs');
+  const path = require('path');
   const authFile = process.env.GANGNIAGA_API_KEY || (() => {
     try {
-      const authPath = 'D:\\\\GangNiaga-WebBridge\\\\daemon\\\\.webbridge-auth.json';
+      const authPath = path.join(__dirname, 'daemon', '.webbridge-auth.json');
       return JSON.parse(fs.readFileSync(authPath, 'utf8')).apiKey;
     } catch (e) { return null; }
   })();

@@ -1,16 +1,17 @@
-domain: google.com
-knowledge: "Google Search engine — general search, text, images, news."
-ui:
+domain: "google.com"
+name: "Google"
+description: "Google Search engine — general search, text, images, news."
+selectors:
   search_input: "textarea[name='q'], input[name='q']"
   search_button: "input[value='Google Search'], button[aria-label='Google Search']"
   results: "#search .g"
 recipes:
-  - name: search
+  search:
+    description: "Search for a query on Google"
     steps:
       - action: fill
-        selector: "{{ui.search_input}}"
-        value: "{{query}}"
+        selector: "textarea[name='q'], input[name='q']"
       - action: click
-        selector: "{{ui.search_button}}"
+        selector: "input[value='Google Search'], button[aria-label='Google Search']"
       - action: wait_for
-        selector: "{{ui.results}}"
+        selector: "#search .g"

@@ -1,0 +1,13 @@
+{
+  "name": "facebook-mcp-server",
+  "version": "1.0.0",
+  "description": "Facebook MCP Server — read posts, messages, pages via Graph API + browser scraping",
+  "type": "module",
+  "bin": {
+    "facebook-mcp": "index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "node-fetch": "^3.3.0"
+  }
+}

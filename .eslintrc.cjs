@@ -17,7 +17,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['mcp-server/**/*.js'],
+      files: ['mcp-server/**/*.js', 'facebook-mcp-server/**/*.js'],
       parserOptions: {
         sourceType: 'module',
       },
