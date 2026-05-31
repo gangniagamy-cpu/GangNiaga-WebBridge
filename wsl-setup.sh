@@ -64,15 +64,17 @@ fi
 ALIAS_BLOCK='
 # GangNiaga Hermes Agent
 export GANGNIAGA_DIR="/mnt/d/GangNiaga-WebBridge"
-alias hermes="cd \$GANGNIAGA_DIR && node hermes-agent-wsl.js"
-alias hermes-i="cd \$GANGNIAGA_DIR && node hermes-agent-wsl.js --interactive"
+alias hermes-agent-aku="cd \$GANGNIAGA_DIR && node hermes-agent-wsl.js"
+alias hermes-agent-aku-i="cd \$GANGNIAGA_DIR && node hermes-agent-wsl.js --interactive"
+alias Hermes-Agent-Aku="cd \$GANGNIAGA_DIR && node hermes-agent-wsl.js"
+alias Hermes-Agent-Aku-i="cd \$GANGNIAGA_DIR && node hermes-agent-wsl.js --interactive"
 '
 
 # Update .bashrc
 BASHRC="$HOME/.bashrc"
 if [ -f "$BASHRC" ]; then
-  if ! grep -q "hermes-agent-wsl" "$BASHRC" 2>/dev/null; then
-    echo "📌 Adding hermes command alias to .bashrc..."
+  if ! grep -q "hermes-agent-aku" "$BASHRC" 2>/dev/null; then
+    echo "📌 Adding hermes-agent-aku command alias to .bashrc..."
     echo "$ALIAS_BLOCK" >> "$BASHRC"
   fi
 fi
@@ -80,8 +82,8 @@ fi
 # Update .zshrc
 ZSHRC="$HOME/.zshrc"
 if [ -f "$ZSHRC" ]; then
-  if ! grep -q "hermes-agent-wsl" "$ZSHRC" 2>/dev/null; then
-    echo "📌 Adding hermes command alias to .zshrc..."
+  if ! grep -q "hermes-agent-aku" "$ZSHRC" 2>/dev/null; then
+    echo "📌 Adding hermes-agent-aku command alias to .zshrc..."
     echo "$ALIAS_BLOCK" >> "$ZSHRC"
   fi
 fi
@@ -92,8 +94,8 @@ echo ""
 echo "✨ Setup complete!"
 echo ""
 echo "Usage:"
-echo "  hermes              - Run Hermes workflow"
-echo "  hermes-i            - Interactive mode"
+echo "  hermes-agent-aku       - Run workflow (or Hermes-Agent-Aku)"
+echo "  hermes-agent-aku-i     - Interactive console (or Hermes-Agent-Aku-i)"
 echo ""
 echo "Make sure daemon is running on Windows:"
 echo "  cd D:\\GangNiaga-WebBridge && npm run daemon"
